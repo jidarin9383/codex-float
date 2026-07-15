@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-opacity="0.10"/>
+    </filter>
+    <g id="a">
+      <circle cx="9" cy="9" r="6.15" stroke="currentColor" stroke-opacity="0.22" stroke-width="1.35" fill="none"/>
+      <path d="M9 2.85A6.15 6.15 0 0 1 13.75 12.9" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <path d="M7.15 6.35L10.35 9L7.15 11.65" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </g>
+    <g id="b">
+      <rect x="2.75" y="3" width="12.5" height="11.25" rx="3" stroke="currentColor" stroke-width="1.45" fill="none"/>
+      <path d="M5.4 6.45L7.75 8.45L5.4 10.45" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <path d="M9.1 10.55H11.85" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" fill="none"/>
+      <path d="M4.65 14.25H13.35" stroke="currentColor" stroke-opacity="0.22" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      <path d="M4.65 14.25H7.78" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" fill="none"/>
+    </g>
+    <g id="c">
+      <circle cx="9" cy="7.8" r="4.55" fill="currentColor"/>
+      <path d="M7.35 5.85L10.35 7.8L7.35 9.75" stroke="var(--hole)" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <path d="M3.45 14.1C5.75 15.65 12.25 15.65 14.55 14.1" stroke="currentColor" stroke-opacity="0.22" stroke-width="1.35" stroke-linecap="round" fill="none"/>
+      <path d="M3.45 14.1C4.75 14.98 6.43 15.35 7.45 15.45" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" fill="none"/>
+    </g>
+    <style>
+      .title { font: 700 34px -apple-system, BlinkMacSystemFont, sans-serif; fill: #172026; }
+      .subtitle { font: 400 17px -apple-system, BlinkMacSystemFont, sans-serif; fill: #667078; }
+      .card-title { font: 650 23px -apple-system, BlinkMacSystemFont, sans-serif; fill: #172026; }
+      .body { font: 400 15px -apple-system, BlinkMacSystemFont, sans-serif; fill: #667078; }
+      .tag { font: 650 12px -apple-system, BlinkMacSystemFont, sans-serif; fill: #27636e; letter-spacing: .5px; }
+      .menutext { font: 500 15px -apple-system, BlinkMacSystemFont, sans-serif; }
+    </style>
+  </defs>
+  <rect width="1200" height="760" fill="#EEF1F3"/>
+  <text x="72" y="72" class="title">Codex Float · 菜单栏图标重设计</text>
+  <text x="72" y="105" class="subtitle">统一以 36% 剩余额度展示 · 上方为真实 18pt 视觉，下方为 8× 结构放大</text>
+
+  <!-- light menu bar -->
+  <rect x="72" y="140" width="1056" height="42" rx="13" fill="#FFFFFF" stroke="#DDE1E4"/>
+  <text x="92" y="166" class="menutext" fill="#24282B">Finder　文件　编辑　显示</text>
+  <g transform="translate(951 152)" color="#202326" style="--hole:#fff"><use href="#a"/></g>
+  <g transform="translate(1001 152)" color="#202326" style="--hole:#fff"><use href="#b"/></g>
+  <g transform="translate(1051 152)" color="#202326" style="--hole:#fff"><use href="#c"/></g>
+
+  <!-- dark menu bar -->
+  <rect x="72" y="196" width="1056" height="42" rx="13" fill="#25282C"/>
+  <text x="92" y="222" class="menutext" fill="#F2F3F4">Finder　文件　编辑　显示</text>
+  <g transform="translate(951 208)" color="#F4F5F6" style="--hole:#25282C"><use href="#a"/></g>
+  <g transform="translate(1001 208)" color="#F4F5F6" style="--hole:#25282C"><use href="#b"/></g>
+  <g transform="translate(1051 208)" color="#F4F5F6" style="--hole:#25282C"><use href="#c"/></g>
+
+  <!-- cards -->
+  <g transform="translate(72 278)">
+    <rect width="328" height="402" rx="24" fill="#fff" filter="url(#shadow)"/>
+    <rect x="24" y="24" width="80" height="25" rx="12.5" fill="#DDECEF"/><text x="39" y="41" class="tag">推荐方案</text>
+    <g transform="translate(92 78) scale(8)" color="#182024" style="--hole:#fff"><use href="#a"/></g>
+    <text x="24" y="270" class="card-title">A · Orbit</text>
+    <text x="24" y="300" class="body">额度环 + Codex 箭头</text>
+    <text x="24" y="328" class="body">最清楚、最安静、18pt 识别最好</text>
+    <text x="24" y="372" class="tag">配额表达 5/5　品牌识别 4/5</text>
+  </g>
+  <g transform="translate(436 278)">
+    <rect width="328" height="402" rx="24" fill="#fff" filter="url(#shadow)"/>
+    <g transform="translate(92 78) scale(8)" color="#182024" style="--hole:#fff"><use href="#b"/></g>
+    <text x="24" y="270" class="card-title">B · Terminal</text>
+    <text x="24" y="300" class="body">终端框 + 底部额度轨道</text>
+    <text x="24" y="328" class="body">开发者属性强，但小尺寸信息偏多</text>
+    <text x="24" y="372" class="tag">配额表达 3/5　品牌识别 5/5</text>
+  </g>
+  <g transform="translate(800 278)">
+    <rect width="328" height="402" rx="24" fill="#fff" filter="url(#shadow)"/>
+    <g transform="translate(92 78) scale(8)" color="#182024" style="--hole:#fff"><use href="#c"/></g>
+    <text x="24" y="270" class="card-title">C · Float</text>
+    <text x="24" y="300" class="body">悬浮圆点 + 弧形额度轨道</text>
+    <text x="24" y="328" class="body">延续现有品牌，但百分比不够直觉</text>
+    <text x="24" y="372" class="tag">配额表达 3/5　品牌识别 4/5</text>
+  </g>
+</svg>

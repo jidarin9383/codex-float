@@ -1,24 +1,25 @@
+import AppKit
 import SwiftUI
 import CodexFloatCore
 
-/// Collapsed edge widget: one liquid-glass capsule with capacity fill flush to the edge.
-/// No nested pill, no gray empty track, no inset stroke gap around the fill.
+/// Collapsed edge widget: transparent liquid-glass capsule with capacity fill flush to the edge.
+/// Text stays dark until fill is wide enough that white glyphs sit fully on the color band.
 struct CompactWidgetView: View {
     let snapshot: QuotaSnapshot
 
     var body: some View {
-        ZStack(alignment: .leading) {
-            // Layer 1 — glass body (same silhouette as clip).
+        ZStack {
+            // Layer 1 — transparent glass (not opaque wash).
             Capsule(style: .continuous)
                 .fill(.ultraThinMaterial)
 
-            // Layer 2 — soft top sheen only (no inset border ring).
+            // Layer 2 — soft top sheen only.
             Capsule(style: .continuous)
                 .fill(
                     LinearGradient(
                         colors: [
-                            Color.white.opacity(0.34),
-                            Color.white.opacity(0.08),
+                            Color.white.opacity(0.32),
+                            Color.white.opacity(0.06),
                             Color.clear
                         ],
                         startPoint: .top,
@@ -28,39 +29,35 @@ struct CompactWidgetView: View {
                 .blendMode(.plusLighter)
                 .allowsHitTesting(false)
 
-            // Layer 3 — capacity fill: full height, flush left/top/bottom; width = remaining %.
+            // Layer 3 — capacity fill from the leading edge (semantic green / orange / red).
             GeometryReader { geo in
                 let filled = max(0, min(geo.size.width, geo.size.width * fillFraction))
                 if filled > 0 {
                     Rectangle()
                         .fill(capacityGradient)
                         .frame(width: filled, height: geo.size.height)
-                        .opacity(0.90)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
                 }
             }
             .allowsHitTesting(false)
 
-            // Layer 4 — content over the fill/glass.
-            HStack(spacing: 8) {
+            // Layer 4 — logo + percent centered in the capsule (both axes).
+            HStack(spacing: 5) {
                 CodexFloatLogoMarkV2(style: contentOnFill ? .whiteOnDark : .darkOnLight)
-                    .frame(width: 18, height: 18)
+                    .frame(width: 16, height: 16)
                     .accessibilityHidden(true)
 
                 percentageText
-
-                if showsRemainingLabel {
-                    Text("剩余")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(contentOnFill ? Color.white.opacity(0.85) : Color.secondary)
-                }
-
-                Spacer(minLength: 0)
             }
-            .padding(.horizontal, 14)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(width: CodexFloatTheme.widgetSize.width, height: CodexFloatTheme.widgetSize.height)
-        // Clip → compositingGroup → shadow so elevation follows the capsule alpha, not a rect.
-        .liquidGlassChrome(shape: Capsule(style: .continuous), edgeWidth: 0.95, emphasized: false)
+        .liquidGlassChrome(
+            shape: Capsule(style: .continuous),
+            edgeWidth: 0.8,
+            edgeOpacity: 0.08,
+            elevation: .soft
+        )
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityValue(accessibilityValue)
@@ -70,15 +67,39 @@ struct CompactWidgetView: View {
         Group {
             if let remaining = snapshot.remainingPercent, snapshot.freshness != .loading {
                 Text(QuotaMath.formatPercent(remaining))
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
                     .monospacedDigit()
-                    .foregroundStyle(contentOnFill ? Color.white : Color.primary)
+                    .foregroundStyle(primaryLabelColor)
+                    .shadow(color: labelShadow, radius: contentOnFill ? 0.5 : 0, x: 0, y: 0.5)
             } else {
                 Text("—")
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
-                    .foregroundStyle(contentOnFill ? Color.white.opacity(0.9) : Color.secondary)
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundStyle(secondaryLabelColor)
             }
         }
+    }
+
+    /// White glyphs only when fill is wide enough that logo + % sit inside the color band.
+    private var contentOnFill: Bool {
+        fillFraction >= 0.58
+    }
+
+    private var primaryLabelColor: Color {
+        if contentOnFill {
+            return .white
+        }
+        return Color(nsColor: .labelColor)
+    }
+
+    private var secondaryLabelColor: Color {
+        if contentOnFill {
+            return Color.white.opacity(0.9)
+        }
+        return Color(nsColor: .secondaryLabelColor)
+    }
+
+    private var labelShadow: Color {
+        contentOnFill ? Color.black.opacity(0.2) : .clear
     }
 
     private var fillFraction: CGFloat {
@@ -95,20 +116,12 @@ struct CompactWidgetView: View {
     private var capacityGradient: LinearGradient {
         LinearGradient(
             colors: [
-                capacityColor.opacity(0.95),
-                capacityColor.opacity(0.72)
+                capacityColor.opacity(0.94),
+                capacityColor.opacity(0.80)
             ],
             startPoint: .leading,
             endPoint: .trailing
         )
-    }
-
-    private var contentOnFill: Bool {
-        fillFraction >= 0.28
-    }
-
-    private var showsRemainingLabel: Bool {
-        snapshot.remainingPercent != nil && snapshot.freshness != .error && snapshot.freshness != .loading
     }
 
     private var accessibilityLabel: String {

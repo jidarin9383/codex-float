@@ -41,8 +41,8 @@ Do not use the official OpenAI/Codex logo as this app’s icon. Original code pu
 
 ## Shared rules
 
-- Menu bar = **app logo template** (monochrome), not percentage digits, not a quota ring.
-- Quota attention color lives on the floating widget chip/track, not the menu bar logo.
+- Menu bar = **app logo template** (monochrome) **plus** remaining percentage text beside it.
+- Quota attention color (green / orange / red fill) lives on the floating widget and detail progress; the menu bar logo stays template-tinted.
 - Production pick is open; app currently still renders the v1-inspired vector mark in code until a direction is frozen.
 
 ## Quick compare

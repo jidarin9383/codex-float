@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+  <!-- Terminal frame + quota rail. Preview value: 36% remaining. -->
+  <rect x="2.75" y="3" width="12.5" height="11.25" rx="3" stroke="#000" stroke-width="1.45"/>
+  <path d="M5.4 6.45L7.75 8.45L5.4 10.45" stroke="#000" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M9.1 10.55H11.85" stroke="#000" stroke-width="1.45" stroke-linecap="round"/>
+  <path d="M4.65 14.25H13.35" stroke="#000" stroke-opacity="0.22" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M4.65 14.25H7.78" stroke="#000" stroke-width="1.9" stroke-linecap="round"/>
+</svg>

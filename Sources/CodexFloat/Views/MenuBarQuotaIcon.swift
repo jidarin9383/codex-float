@@ -2,25 +2,22 @@ import AppKit
 import SwiftUI
 import CodexFloatCore
 
-/// Menu bar uses a **template monochrome** remaining-quota ring (system-tinted).
-/// Accessibility announces both remaining quota and freshness.
+/// Menu bar: template monochrome brand mark + live remaining percentage.
 ///
-/// Important: `MenuBarExtra` is unreliable with `Canvas` + multi-color SwiftUI views.
-/// We rasterize a pure black 18×18 template `NSImage` so macOS always shows the glyph.
+/// `MenuBarExtra` is unreliable with multi-color `Canvas` views, so the glyph is a
+/// pure black template `NSImage`. Drawing uses **top-left origin** (`flipped: true`)
+/// so the float ground arc stays at the bottom (matching the SVG brand mark).
 struct MenuBarQuotaIcon: View {
     let snapshot: QuotaSnapshot
 
     var body: some View {
-        // Label gives the extra a stable identity; icon is the template image.
-        Label {
-            Text(CodexFloatTheme.productName)
-        } icon: {
+        HStack(spacing: 3) {
             ZStack(alignment: .bottomTrailing) {
                 Image(nsImage: Self.templateLogo(remainingPercent: visibleRemainingPercent))
                     .renderingMode(.template)
                     .resizable()
                     .interpolation(.high)
-                    .frame(width: 18, height: 18)
+                    .frame(width: 16, height: 16)
 
                 // Freshness pip stays outside the template image so color remains visible.
                 if snapshot.freshness == .error {
@@ -40,10 +37,13 @@ struct MenuBarQuotaIcon: View {
                         .offset(x: 1, y: 1)
                 }
             }
-            .frame(width: 18, height: 18)
+            .frame(width: 16, height: 16)
+
+            Text(percentLabel)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(.primary)
         }
-        .labelStyle(.iconOnly)
-        .frame(width: 22, height: 22)
         .accessibilityLabel(accessibilityLabel)
         .help(accessibilityLabel)
     }
@@ -59,44 +59,58 @@ struct MenuBarQuotaIcon: View {
         snapshot.freshness == .loading ? nil : snapshot.remainingPercent
     }
 
-    /// Black-on-clear 18×18 template matching the brand silhouette with a live quota arc.
+    /// Compact text beside the glyph (e.g. `93%`, or placeholders while loading/unknown).
+    private var percentLabel: String {
+        if snapshot.freshness == .loading {
+            return "…"
+        }
+        if let remaining = snapshot.remainingPercent {
+            return QuotaMath.formatPercent(remaining)
+        }
+        return "—"
+    }
+
+    /// Black-on-clear 18×18 template matching brand silhouette with a live quota arc.
+    /// Coordinates match `Assets/Brand/v2/menubar-template.svg` (y grows downward).
     private static func templateLogo(remainingPercent: Double?) -> NSImage {
         let size = NSSize(width: 18, height: 18)
-        let image = NSImage(size: size, flipped: false) { rect in
+        let image = NSImage(size: size, flipped: true) { _ in
             guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
             ctx.setShouldAntialias(true)
             ctx.setAllowsAntialiasing(true)
             NSColor.black.set()
 
-            let scale: CGFloat = 1
-            let center = CGPoint(x: 9 * scale, y: 7.75 * scale)
+            // SVG center: orb sits above the float ground.
+            let center = CGPoint(x: 9, y: 7.75)
+            let radius: CGFloat = 5.55
 
             // Outer track
             let track = NSBezierPath(
-                ovalIn: CGRect(x: center.x - 5.55, y: center.y - 5.55, width: 11.1, height: 11.1)
+                ovalIn: CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
             )
             track.lineWidth = 1.15
             track.lineCapStyle = .round
             track.stroke()
 
+            // Remaining progress starts at 12 o'clock, sweeps clockwise (battery-like remaining).
             if let remainingPercent {
                 let fraction = min(1, max(0, remainingPercent / 100))
                 if fraction > 0 {
-                    let progress: NSBezierPath
-                    if fraction == 1 {
-                        progress = NSBezierPath(
-                            ovalIn: CGRect(
-                                x: center.x - 5.55,
-                                y: center.y - 5.55,
-                                width: 11.1,
-                                height: 11.1
+                    let progress = NSBezierPath()
+                    if fraction >= 0.999 {
+                        progress.appendOval(
+                            in: CGRect(
+                                x: center.x - radius,
+                                y: center.y - radius,
+                                width: radius * 2,
+                                height: radius * 2
                             )
                         )
                     } else {
-                        progress = NSBezierPath()
+                        // In flipped (y-down) view: 90° is top; clockwise decreases angle in AppKit.
                         progress.appendArc(
                             withCenter: center,
-                            radius: 5.55,
+                            radius: radius,
                             startAngle: 90,
                             endAngle: 90 - (360 * fraction),
                             clockwise: true
@@ -124,7 +138,7 @@ struct MenuBarQuotaIcon: View {
             disc.windingRule = .evenOdd
             disc.fill()
 
-            // Float ground
+            // Float ground — bottom arc under the orb (SVG y≈15.15 of 18).
             let ground = NSBezierPath()
             ground.move(to: CGPoint(x: 4.4, y: 15.15))
             ground.curve(

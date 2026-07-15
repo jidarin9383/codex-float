@@ -54,18 +54,18 @@ MenuBarExtra / Floating NSPanel / Detail Popover
 
 ### Presentation
 
-- `MenuBarExtra` provides a persistent **icon-only** menu bar glyph whose ring arc reflects weekly remaining quota (no digits) and a settings/actions menu (not the quota detail). Missing quota has no arc; stale/error states use an additional status marker. MVP menu: floating-widget toggle, launch at login, check for updates, quit.
-- A borderless, non-activating `NSPanel` provides the floating widget (on by default at first launch). Click expands the panel in place to the detail layout (~320 × 360).
+- `MenuBarExtra` provides a persistent **logo template + remaining % text** and a settings/actions menu (not the quota detail). Stale/error use a small status pip. MVP menu: floating-widget toggle, launch at login, check for updates, quit.
+- A borderless, non-activating `NSPanel` provides the floating widget (on by default at first launch). Collapsed size ~**92 × 36** (logo + percent, centered). Click expands in place to the detail layout (~320 × 372).
 - Panel behavior: `canJoinAllSpaces`, `fullScreenAuxiliary`, no Dock icon, remembers position per display, and avoids stealing focus.
 - SwiftUI renders menu bar, widget, detail, and all states from one observable store.
 - A top-right collapse control changes the expanded panel back to its edge-attached compact state; it does not close the app or hide the widget.
 - Primary quota still comes from app-server `account/rateLimits/read`.
 - Reset opportunity **count** from `rateLimitResetCredits.availableCount`.
-- Per-credit **expiry dates** (when available) from ChatGPT HTTPS `wham/rate-limit-reset-credits` using the local Codex access token in `auth.json` (in-memory only; never logged). Display `第 N 次 · M 月 d 日`. If dates are missing, show `可用` — never invent dates.
+- Per-credit **expiry dates** (when available) from ChatGPT HTTPS `wham/rate-limit-reset-credits` using the local Codex access token in `auth.json` (in-memory only; never logged). Display `第 N 次` + date when expanded. If dates are missing, count-only — never invent dates.
 - No web jump for the reset-opportunity row.
-- The compact dot and progress tint share one semantic state: green above 20%, system orange from 11% through 20%, system red at or below 10%, and secondary gray for loading, stale, or unknown data. Stale and error states also use text or iconography so color is not the only signal.
-- Working display name: **Codex Float**; provisional bundle id: `app.codexfloat.mac` until packaging is finalized.
-- Detail reset formatting includes absolute local date/time plus relative countdown.
+- Compact fill and detail progress tint: system green when remaining **> 50%**, orange when **> 20% and ≤ 50%**, red when **≤ 20%**, secondary gray for loading / unknown; stale may use yellow. Stale and error also use text or iconography so color is not the only signal.
+- Working display name: **Codex Float**; bundle id: `app.codexfloat.mac`.
+- Detail copy: **下次重置** (absolute + relative), **当前套餐**.
 
 ## Protocol Contract
 

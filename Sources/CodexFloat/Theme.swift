@@ -3,7 +3,8 @@ import CodexFloatCore
 
 enum CodexFloatTheme {
     static let productName = "Codex Float"
-    static let widgetSize = CGSize(width: 138, height: 40)
+    /// Compact float capsule — logo + percent only.
+    static let widgetSize = CGSize(width: 92, height: 36)
     /// Collapsed detail (reset-credit list folded).
     static let detailSize = CGSize(width: 320, height: 372)
     /// One expanded reset-credit row (divider + line).
@@ -41,11 +42,12 @@ enum CodexFloatTheme {
     static let brandGlass = Color(red: 0xA9 / 255, green: 0xC8 / 255, blue: 0xCF / 255)
     static let brandMist = Color(red: 0xE6 / 255, green: 0xF2 / 255, blue: 0xF4 / 255)
 
+    /// Battery-like quota colors: green >50%, orange 20–50%, red ≤20%.
+    /// Kept vivid so the floating widget fill reads clearly through glass.
     static func attentionColor(_ attention: QuotaAttention) -> Color {
         switch attention {
         case .healthy:
-            // Stay in Ocean Mist family instead of system green.
-            return brandRing
+            return Color(nsColor: .systemGreen)
         case .attention:
             return Color(nsColor: .systemOrange)
         case .critical:
@@ -71,23 +73,25 @@ enum CodexFloatTheme {
 struct GlassEdgeStroke<S: InsettableShape>: View {
     var shape: S
     var lineWidth: CGFloat = 1
+    /// Outer hairline strength (lower = less “black rim”).
+    var edgeOpacity: Double = 0.10
 
     var body: some View {
         ZStack {
             // Outer: soft dark hairline — separation on light/white wallpapers.
-            shape.strokeBorder(Color.black.opacity(0.12), lineWidth: lineWidth)
+            shape.strokeBorder(Color.black.opacity(edgeOpacity), lineWidth: lineWidth)
             // Inner: light specular — reads on dark wallpapers.
             shape.strokeBorder(
                 LinearGradient(
                     colors: [
-                        Color.white.opacity(0.78),
-                        Color.white.opacity(0.34),
-                        Color.white.opacity(0.16)
+                        Color.white.opacity(0.72),
+                        Color.white.opacity(0.28),
+                        Color.white.opacity(0.12)
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 ),
-                lineWidth: max(0.6, lineWidth * 0.65)
+                lineWidth: max(0.55, lineWidth * 0.6)
             )
         }
         .allowsHitTesting(false)
@@ -100,21 +104,32 @@ struct GlassEdgeStroke<S: InsettableShape>: View {
 /// casts a box shadow. Flatten with `compositingGroup()` *after* clipping so the
 /// shadow uses the rounded alpha mask (Apple-style floating glass).
 struct LiquidGlassElevation: ViewModifier {
-    var emphasized: Bool = false
+    enum Style {
+        /// Floating widget — airy, no heavy black pad under the capsule.
+        case soft
+        /// Detail panel — slightly more lift.
+        case regular
+        case emphasized
+    }
+
+    var style: Style = .regular
 
     func body(content: Content) -> some View {
         // Flatten clipped glass into one bitmap with correct rounded alpha, then shade.
         let flat = content.compositingGroup()
-        if emphasized {
+        switch style {
+        case .soft:
+            // Single diffuse lift — avoids the “black base plate” look on white desktops.
             flat
-                .shadow(color: Color.black.opacity(0.06), radius: 1.5, x: 0, y: 1)
-                .shadow(color: Color.black.opacity(0.10), radius: 12, x: 0, y: 6)
-                .shadow(color: Color.black.opacity(0.08), radius: 24, x: 0, y: 14)
-        } else {
+                .shadow(color: Color.black.opacity(0.06), radius: 10, x: 0, y: 3)
+        case .regular:
             flat
-                .shadow(color: Color.black.opacity(0.05), radius: 1, x: 0, y: 0.5)
-                .shadow(color: Color.black.opacity(0.10), radius: 8, x: 0, y: 4)
-                .shadow(color: Color.black.opacity(0.07), radius: 16, x: 0, y: 8)
+                .shadow(color: Color.black.opacity(0.04), radius: 1, x: 0, y: 0.5)
+                .shadow(color: Color.black.opacity(0.07), radius: 10, x: 0, y: 4)
+        case .emphasized:
+            flat
+                .shadow(color: Color.black.opacity(0.04), radius: 1.5, x: 0, y: 1)
+                .shadow(color: Color.black.opacity(0.08), radius: 14, x: 0, y: 6)
         }
     }
 }
@@ -124,16 +139,21 @@ extension View {
     func liquidGlassChrome<S: InsettableShape>(
         shape: S,
         edgeWidth: CGFloat = 0.95,
+        edgeOpacity: Double = 0.10,
+        elevation: LiquidGlassElevation.Style = .regular,
         emphasized: Bool = false
     ) -> some View {
-        self
+        let style: LiquidGlassElevation.Style = emphasized ? .emphasized : elevation
+        return self
             .clipShape(shape)
-            .overlay { GlassEdgeStroke(shape: shape, lineWidth: edgeWidth) }
-            .modifier(LiquidGlassElevation(emphasized: emphasized))
+            .overlay {
+                GlassEdgeStroke(shape: shape, lineWidth: edgeWidth, edgeOpacity: edgeOpacity)
+            }
+            .modifier(LiquidGlassElevation(style: style))
     }
 
     func liquidGlassElevation(emphasized: Bool = false) -> some View {
-        modifier(LiquidGlassElevation(emphasized: emphasized))
+        modifier(LiquidGlassElevation(style: emphasized ? .emphasized : .regular))
     }
 }
 

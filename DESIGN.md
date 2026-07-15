@@ -19,37 +19,36 @@ The app should feel like a quiet macOS instrument aligned with **macOS Tahoe liq
 - App mark: **Ocean Mist v2 Float Glass** — outer progress ring (~1/3) + glass orb + center `>` + soft ground.
 - Canonical palette: ring `#3D7A86` / ink `#173238` / glass `#A9C8CF`–`#E6F2F4`.
 - Assets live in `Assets/Brand/` (canonical copies) and `Assets/Brand/v2/` (source). Do not ship official OpenAI/Codex logos.
-- Surfaces stay Tahoe liquid glass; healthy quota tint uses brand ring, not system green.
+- Surfaces stay Tahoe liquid glass. **Quota fill colors** use system semantic green / orange / red (not brand ring alone).
 
 ### Menu Bar Item
 
-- **App logo template glyph only** (white/monochrome system template). **No percentage digits**.
-- v2 silhouette: outer progress + solid disc with `>` cutout + float ground; drawn at 16–18 pt (`MenuBarLogoIconV2`).
-- Optional tiny status pip for loading/error only; never replaces the logo.
-- Accessibility label includes the remaining percentage even though it is not drawn.
+- **Brand logo template** (monochrome system template) **plus live remaining percentage** to the right (e.g. `93%`).
+- v2 silhouette: outer progress + solid disc with `>` cutout + **float ground arc at the bottom**; drawn ~16 pt (`MenuBarQuotaIcon`).
+- Optional tiny status pip for loading / stale / error; never replaces the logo.
+- Accessibility label includes remaining percentage and freshness.
 - Click opens a native menu of app actions (not the detail panel): 悬浮窗, 开机自启, 检查更新, 退出.
 
 ### Floating Widget (collapsed)
 
-- Natural target size: approximately 138 × 40 pt collapsed **liquid-glass battery capsule**.
-- One capsule only — no nested pill. Body is Tahoe-style Liquid Glass (`.ultraThinMaterial` + specular sheen).
+- Natural target size: approximately **92 × 36 pt** compact **liquid-glass battery capsule**.
+- One capsule only — no nested pill. Body is transparent Tahoe glass (`.ultraThinMaterial` + light specular sheen).
 - Capacity is a **full-height** left fill flush to the capsule edge.
-- Unfilled region stays pure glass — **no gray empty track**.
-- Edge: dual-tone stroke (dark hairline + light specular) so the chip reads on white and dark desktops.
-- Elevation: soft multi-layer ambient shadow (Apple Liquid Glass: floating functional layer; larger surfaces cast richer shadow). Avoid hard black plates.
-- Content overlays the glass: **transparent product logo** (no chip), percentage, optional `剩余`.
-- Fill tint follows battery-like semantic color (healthy brand ring / orange / red / gray). At the 18% fixture the fill is system orange.
+- Unfilled region stays **pure transparent glass** — no opaque wash, no gray empty track.
+- Edge: light dual-tone hairline. Elevation: **soft single-layer** ambient shadow (avoid heavy black pads under the chip).
+- Content: **logo + percentage only** (no `剩余` label). Logo + percent are **centered** in the capsule (both axes). Fill still grows from the leading edge.
+- Fill tint: system green / orange / red / gray per attention thresholds below. Glyphs turn white only when fill is wide enough (~≥58%) that they sit fully on the color band; otherwise use label color for contrast on glass.
 - No title bar, close button, pin button, or refresh button in the collapsed state.
 - Click expands in place to the detail panel.
 
 ### Detail Panel (floating expanded)
 
 - Natural target size: approximately 320 × 372 pt; expands from the collapsed widget in place.
-- Top brand row: **logo + product name `Codex Float`**, collapse control (`chevron.right`) on the trailing edge; weekly percentage hero below.
-- Middle region: one remaining-quota progress track and factual rows for reset and plan.
-- Reset row: primary absolute date/time (`M 月 d 日 HH:mm`), secondary relative countdown (`N 天 N 小时后重置`).
-- Bottom region: reset opportunities with a `查看` button and external-link symbol.
-- Do not show a per-opportunity expiry subtitle until the supported Codex protocol exposes that data.
+- Top brand row: **logo + product name `Codex Float`**, collapse control (`chevron.right`) on the trailing edge; weekly percentage hero below (tinted by attention color).
+- Middle region: one remaining-quota progress track and factual rows:
+  - **下次重置** — absolute date/time + relative countdown
+  - **当前套餐** — plan type when available
+- Bottom region: **重置机会** summary (`N 次可用`); expand chevron only when per-credit expiry dates exist; expanded list shows `第 N 次` + date.
 - Additional limit windows appear as secondary rows only when present.
 
 ## Tokens
@@ -59,16 +58,17 @@ The app should feel like a quiet macOS instrument aligned with **macOS Tahoe liq
 - Background: Tahoe liquid glass (`.ultraThinMaterial` plus specular sheen), adaptive light/dark.
 - Primary text: `labelColor`.
 - Secondary text: `secondaryLabelColor`.
-- Healthy: system green above 20% remaining.
-- Attention: system orange from 11% through 20% remaining.
-- Critical: system red at or below 10% remaining.
+- Healthy: system green when remaining **> 50%**.
+- Attention: system orange when remaining **> 20% and ≤ 50%**.
+- Critical: system red when remaining **≤ 20%**.
 - Stale: system yellow with text; never rely on color alone.
 - Unknown or loading: `secondaryLabelColor` gray.
 
 ### Typography
 
 - System San Francisco only.
-- Hero percentage: 20–24 pt semibold in the widget; 40–48 pt semibold in detail.
+- Compact widget percentage: ~14 pt semibold rounded tabular.
+- Detail hero percentage: 40–48 pt semibold.
 - Section label: 11–12 pt medium.
 - Body: 13–14 pt regular.
 - Tabular digits for percentages, countdowns, and reset times.
@@ -99,7 +99,7 @@ The app should feel like a quiet macOS instrument aligned with **macOS Tahoe liq
 
 - Short, factual, and calm.
 - MVP UI copy is Simplified Chinese.
-- Prefer `剩余 18%`, `7 月 20 日 14:30` + `6 天 18 小时后重置`, `2 次重置机会`, and `查看`.
+- Prefer compact `18%` on the float, detail copy such as `下次重置` / `当前套餐`, `7 月 20 日 14:30` + `6 天 18 小时后重置`, `2 次可用`.
 - Avoid motivational scoring such as “speed up” or “slow down” in the MVP.
 - Explain failures with one cause and one action.
 
@@ -130,9 +130,9 @@ The app should feel like a quiet macOS instrument aligned with **macOS Tahoe liq
 - The selected visual route is the light-mode right-edge widget that expands inward.
 - Preserve its edge attachment, warm translucent material, large remaining percentage, one weekly progress track, and flat factual rows.
 - Replace all English UI copy with Simplified Chinese.
-- Add the dynamic reset-opportunity count as a factual detail row with one `查看` button that opens the official web usage page.
+- Show dynamic reset-opportunity count; optional dated rows when ChatGPT credits API provides expiries (never invent dates).
 - Add one native top-right collapse button; it returns the panel to the narrow right-edge widget and is not a close, settings, or refresh action.
-- The compact top dot and progress fill change together like a battery indicator: green above 20%, orange at 11–20%, red at 0–10%, and gray when current quota is unavailable.
+- The compact progress fill changes like a battery indicator: green >50%, orange >20%…50%, red ≤20%, gray when current quota is unavailable.
 - The progress track represents remaining quota: 18% remaining means an 18%-filled track.
 - Do not show a target marker, `已使用 82%`, or `100%`; those repeat information already conveyed by the hero metric.
 - Remove the normal-state refresh icon, update timestamp, and settings row. Automatic refresh should be invisible unless data becomes stale or unavailable.

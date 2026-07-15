@@ -82,7 +82,7 @@
       padding: 28px 18px 22px; display: flex; justify-content: flex-end; align-items: flex-start;
     }
     .widget {
-      width: 138px; height: 40px; border-radius: 999px;
+      width: 92px; height: 36px; border-radius: 999px;
       display: flex; align-items: center; gap: 8px; padding: 0 14px;
       overflow: hidden; position: relative;
       background:
@@ -164,7 +164,7 @@
   <p class="sub">
     菜单栏默认已切到 <b>Ocean Mist v2</b>（外侧进度 + 实心圆 + <code>&gt;</code> 挖空 + 底弧）。
     本页用真实 brand 资产核对 18% / loading / stale / 0% / 登录失败 / 缺 codex。
-    菜单栏仍为 logo-only；额度数字只出现在悬浮窗。
+    菜单栏 = logo + 百分比；悬浮窗 = 短胶囊 logo + 百分比（无「剩余」）。
   </p>
 
   <div class="grid">
@@ -217,7 +217,7 @@
           <div class="widget" style="--accent: var(--orange); --p: 18" title="default fixture 18%">
             <img class="logo-mark" src="../Assets/Brand/v2/logo-mark.svg" alt="" />
             <div class="pct">18%</div>
-            <div class="rem">剩余</div>
+
           </div>
         </div>
       </div>
@@ -229,7 +229,7 @@
       <div class="desk"><div class="stage">
         <div class="widget" style="--accent: var(--orange); --p: 18">
           <img class="logo-mark" src="../Assets/Brand/v2/logo-mark.svg" alt="" />
-          <div class="pct">18%</div><div class="rem">剩余</div>
+          <div class="pct">18%</div>
         </div>
       </div></div>
     </section>
@@ -249,7 +249,7 @@
       <div class="desk"><div class="stage">
         <div class="widget" style="--accent: var(--yellow); --p: 18">
           <img class="logo-mark" src="../Assets/Brand/v2/logo-mark.svg" alt="" />
-          <div class="pct">18%</div><div class="rem">剩余</div>
+          <div class="pct">18%</div>
         </div>
       </div></div>
     </section>
@@ -259,7 +259,7 @@
       <div class="desk"><div class="stage">
         <div class="widget" style="--accent: var(--red); --p: 0">
           <img class="logo-mark" src="../Assets/Brand/v2/logo-mark.svg" alt="" />
-          <div class="pct">0%</div><div class="rem">剩余</div>
+          <div class="pct">0%</div>
         </div>
       </div></div>
     </section>
@@ -307,9 +307,9 @@
   </div>
 
   <div class="checklist">
-    <div class="check"><b>菜单栏</b>默认 v2 实心圆 + &gt;，无百分比数字；仅 loading/error 显示小 pip。</div>
-    <div class="check"><b>悬浮窗</b>单层 liquid glass 胶囊；容量色铺满高度从左填剩余%；未填区透明玻璃，无灰底、无内嵌胶囊。</div>
-    <div class="check"><b>健康色</b>填充 healthy 走 brand ring <code>#3D7A86</code>，不使用系统绿。</div>
+    <div class="check"><b>菜单栏</b>v2 logo + 百分比数字；loading/stale/error 可用小 pip。</div>
+    <div class="check"><b>悬浮窗</b>~92×36 透明玻璃胶囊；logo+百分比居中；容量色从左填；未填区透明玻璃。</div>
+    <div class="check"><b>健康色</b>&gt;50% 系统绿 · 20–50% 橙 · ≤20% 红 · 灰/黄表示未知或过期。</div>
     <div class="check"><b>诚实状态</b>loading/stale/error 有灰色或黄/橙信号 + 文案，不伪装为最新额度。</div>
     <div class="check"><b>运行时切换</b>菜单「切换示例数据」可循环全部 fixtures（静态模式）。</div>
     <div class="check"><b>下一步</b>Step 3 协议层：app-server JSONL client + repository。</div>

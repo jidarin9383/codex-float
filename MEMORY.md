@@ -30,14 +30,14 @@
 ## 2026-07-14 — Collapse, reset-detail, and color decisions
 
 - The expanded sheet has one top-right collapse button that returns it to the right-edge compact widget without closing or hiding the app.
-- The compact top dot and progress fill use battery-like thresholds: green above 20%, orange from 11% through 20%, red at or below 10%, and gray when freshness is unknown. The 18% design fixture is orange.
+- The compact progress fill uses battery-like thresholds: green above 50%, orange from above 20% through 50%, red at or below 20%, and gray when freshness is unknown. (Updated 2026-07-15; 18% fixture is critical red.)
 - The generated app-server schema defines `RateLimitResetCreditsSummary` with only `availableCount`; it does not expose individual reset-credit records or expiry dates. The UI must not invent text such as `第 1 次，7 月 30 日到期`.
 - Codex App `26.707.72221` registers the `codex` URL scheme and contains an internal `/settings/usage` route, but the public settings deep-link allowlist does not expose that route. The MVP therefore opens the stable official web usage page instead of relying on AppleScript or private app internals.
 
 ## 2026-07-14 — Surface defaults and menu IA
 
 - First launch defaults: **menu bar + floating widget both on**.
-- Menu bar click opens a **settings/actions menu**, not the quota detail. Menu items for MVP: 悬浮窗开关, 开机自启, 检查更新, 退出. Menu bar still shows the weekly remaining percentage in the bar itself.
+- Menu bar click opens a **settings/actions menu**, not the quota detail. Menu items for MVP: 悬浮窗开关, 开机自启, 检查更新, 退出. Menu bar shows **logo + remaining % digits**.
 - Floating widget click expands **in place** to ~320×360 detail (not a separate menu-bar popover).
 - Detail UI design work may use Open Design; implementation follows Tech-Spec sequence starting with static fixture UI.
 - Product name frozen as working name: **Codex Float** (bundle `app.codexfloat.mac`).
@@ -50,7 +50,7 @@
 
 ## 2026-07-14 — Visual and naming refinements
 
-- Menu bar is **icon-only** (remaining-quota ring). Percentage digits belong on the floating widget, not the menu bar.
+- Menu bar was briefly icon-only; product decision later: **logo + percentage digits** on the menu bar as well as the float.
 - Surfaces use **macOS Tahoe liquid glass**: `.ultraThinMaterial`, specular sheen, luminous edge stroke, larger continuous radii.
 - Reset row shows absolute date/time + relative countdown (e.g. `7 月 20 日 14:30` / `6 天 18 小时后重置`).
 - Working product name: **Codex Float**.
@@ -85,7 +85,7 @@
 - User selected **Ocean Mist** from color palette options.
 - Canonical: ring `#3D7A86` / ink `#173238` / glass `#A9C8CF`–`#E6F2F4`.
 - Applied to `app-icon.svg`, `logo-mark*.svg`, `CodexFloatTheme` brand tokens, logo V2 colors.
-- Healthy attention tint uses brand ring (not system green) to stay in-family.
+- Healthy attention tint was briefly brand ring; **usered to system green** with thresholds green >50% / orange ≤50% and >20% / red ≤20%.
 
 ## 2026-07-15 — Collapsed widget: battery capsule
 
@@ -93,8 +93,15 @@
 - **Single liquid-glass capsule** (no nested pill): full-height left fill = remaining %; unfilled stays pure glass (no gray track).
 - No inset white frame/gap — capacity is flush to the capsule edge.
 - Expanded detail header shows **logo + Codex Float** brand row.
-- Fill tint follows quota attention (healthy ring / orange / red / gray).
+- Fill tint follows quota attention (system green / orange / red / gray).
 - Logo overlays with **transparent** background — no attention-colored chip.
+
+## 2026-07-15 — Widget polish (post color + contrast)
+
+- Menu bar: logo + live %; float ground arc drawn with flipped template (arc at bottom).
+- Compact size **~92×36**; content **logo + % only** (removed `剩余`); content **centered**.
+- Transparent `.ultraThinMaterial` body; soft single-layer shadow (no heavy black pad).
+- Detail labels: **下次重置**, **当前套餐**.
 
 ## 2026-07-15 — Step 2 menu-bar v2 cutover + Step 3 protocol
 

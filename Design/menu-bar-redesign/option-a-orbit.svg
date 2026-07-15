@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+  <!-- Recommended: quota orbit + Codex chevron. Preview value: 36% remaining. -->
+  <circle cx="9" cy="9" r="6.15" stroke="#000" stroke-opacity="0.22" stroke-width="1.35"/>
+  <path d="M9 2.85A6.15 6.15 0 0 1 13.75 12.9" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+  <path d="M7.15 6.35L10.35 9L7.15 11.65" stroke="#000" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

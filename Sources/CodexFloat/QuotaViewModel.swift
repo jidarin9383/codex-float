@@ -39,7 +39,7 @@ final class QuotaViewModel {
         self.useStaticFixtures = staticMode
 
         if staticMode {
-            self.snapshot = QuotaFixtures.current18Percent
+            self.snapshot = QuotaFixtures.healthy75Percent
         } else {
             self.snapshot = snapshot
         }
@@ -134,16 +134,9 @@ final class QuotaViewModel {
 
     func cycleFixture() {
         guard useStaticFixtures else { return }
-        let fixtures = [
-            QuotaFixtures.current18Percent,
-            QuotaFixtures.loading,
-            QuotaFixtures.stale18Percent,
-            QuotaFixtures.limitReached,
-            QuotaFixtures.loggedOut,
-            QuotaFixtures.codexMissing
-        ]
+        let fixtures = QuotaFixtures.debugCycle
         guard let index = fixtures.firstIndex(of: snapshot) else {
-            snapshot = QuotaFixtures.current18Percent
+            snapshot = fixtures[0]
             return
         }
         snapshot = fixtures[(index + 1) % fixtures.count]
@@ -154,7 +147,7 @@ final class QuotaViewModel {
         if enabled {
             pollTask?.cancel()
             pollTask = nil
-            snapshot = QuotaFixtures.current18Percent
+            snapshot = QuotaFixtures.healthy75Percent
         } else {
             snapshot = QuotaSnapshot(freshness: .loading, statusMessage: "正在读取额度…")
             restartPolling()

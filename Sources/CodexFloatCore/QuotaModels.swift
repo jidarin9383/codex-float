@@ -15,12 +15,13 @@ public enum QuotaAttention: Equatable, Sendable {
     case critical
     case unknown
 
+    /// Thresholds (remaining %): green `> 50`, orange `20…50`, red `≤ 20`.
     public static func from(remainingPercent: Double?) -> QuotaAttention {
         guard let remainingPercent else { return .unknown }
         switch remainingPercent {
-        case let value where value > 20:
+        case let value where value > 50:
             return .healthy
-        case let value where value > 10:
+        case let value where value > 20:
             return .attention
         default:
             return .critical
@@ -216,37 +217,23 @@ public enum ResetTimeFormatting {
     }
 }
 
-/// Fixed design fixtures for static UI work (Tech-Spec step 1).
+/// Fixed design fixtures for static UI / color-band QA.
 public enum QuotaFixtures {
     public static let designNow = Date(timeIntervalSince1970: 1_784_000_000)
 
-    /// DESIGN.md fixture: 18% remaining (orange band), Plus plan, 2 reset opportunities.
+    /// Green band: remaining > 50%.
+    public static var healthy75Percent: QuotaSnapshot {
+        makeCurrent(remaining: 75, planType: "Plus")
+    }
+
+    /// Orange band: remaining > 20% and ≤ 50%.
+    public static var attention35Percent: QuotaSnapshot {
+        makeCurrent(remaining: 35, planType: "Plus")
+    }
+
+    /// Red band: remaining ≤ 20% (legacy name kept for call sites).
     public static var current18Percent: QuotaSnapshot {
-        let resetsAt = designNow.addingTimeInterval(6 * 24 * 3600 + 18 * 3600)
-        let credit1 = designNow.addingTimeInterval(9 * 24 * 3600)
-        let credit2 = designNow.addingTimeInterval(16 * 24 * 3600)
-        return QuotaSnapshot(
-            remainingPercent: 18,
-            planType: "Plus",
-            resetsAt: resetsAt,
-            resetOpportunityCount: 2,
-            resetOpportunities: [
-                ResetOpportunity(index: 1, expiresAt: credit1),
-                ResetOpportunity(index: 2, expiresAt: credit2)
-            ],
-            windows: [
-                QuotaWindow(
-                    id: "weekly",
-                    remainingPercent: 18,
-                    usedPercent: 82,
-                    windowDurationMins: 10_080,
-                    resetsAt: resetsAt,
-                    isWeekly: true
-                )
-            ],
-            fetchedAt: designNow,
-            freshness: .current
-        )
+        makeCurrent(remaining: 18, planType: "Plus")
     }
 
     public static var loading: QuotaSnapshot {
@@ -262,19 +249,7 @@ public enum QuotaFixtures {
     }
 
     public static var limitReached: QuotaSnapshot {
-        var snapshot = current18Percent
-        snapshot.remainingPercent = 0
-        snapshot.windows = [
-            QuotaWindow(
-                id: "weekly",
-                remainingPercent: 0,
-                usedPercent: 100,
-                windowDurationMins: 10_080,
-                resetsAt: snapshot.resetsAt,
-                isWeekly: true
-            )
-        ]
-        return snapshot
+        makeCurrent(remaining: 0, planType: "Plus")
     }
 
     public static var loggedOut: QuotaSnapshot {
@@ -288,6 +263,49 @@ public enum QuotaFixtures {
         QuotaSnapshot(
             freshness: .error,
             statusMessage: "未找到 codex 可执行文件"
+        )
+    }
+
+    /// Ordered for Debug「切换示例数据」— covers green / orange / red / gray / error.
+    public static var debugCycle: [QuotaSnapshot] {
+        [
+            healthy75Percent,
+            attention35Percent,
+            current18Percent,
+            limitReached,
+            loading,
+            stale18Percent,
+            loggedOut,
+            codexMissing
+        ]
+    }
+
+    private static func makeCurrent(remaining: Double, planType: String) -> QuotaSnapshot {
+        let resetsAt = designNow.addingTimeInterval(6 * 24 * 3600 + 18 * 3600)
+        let credit1 = designNow.addingTimeInterval(9 * 24 * 3600)
+        let credit2 = designNow.addingTimeInterval(16 * 24 * 3600)
+        let used = max(0, min(100, 100 - remaining))
+        return QuotaSnapshot(
+            remainingPercent: remaining,
+            planType: planType,
+            resetsAt: resetsAt,
+            resetOpportunityCount: 2,
+            resetOpportunities: [
+                ResetOpportunity(index: 1, expiresAt: credit1),
+                ResetOpportunity(index: 2, expiresAt: credit2)
+            ],
+            windows: [
+                QuotaWindow(
+                    id: "weekly",
+                    remainingPercent: remaining,
+                    usedPercent: used,
+                    windowDurationMins: 10_080,
+                    resetsAt: resetsAt,
+                    isWeekly: true
+                )
+            ],
+            fetchedAt: designNow,
+            freshness: .current
         )
     }
 }

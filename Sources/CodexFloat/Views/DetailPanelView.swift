@@ -90,7 +90,7 @@ struct DetailPanelView: View {
             Text(QuotaMath.formatPercent(remaining))
                 .font(.system(size: 44, weight: .semibold, design: .rounded))
                 .monospacedDigit()
-                .foregroundStyle(.primary)
+                .foregroundStyle(tint)
                 .minimumScaleFactor(0.7)
                 .lineLimit(1)
         } else {

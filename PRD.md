@@ -38,8 +38,8 @@ At any moment, glance at the desktop or menu bar and understand the remaining we
 
 ### Menu Bar
 
-- Shows a compact **icon only** whose ring arc reflects the current weekly remaining percentage. Does not show percentage digits in the menu bar.
-- Loading and unavailable states show no quota arc; stale/error states have a visible status marker. VoiceOver announces both the remaining percentage and freshness.
+- Shows the **brand logo template** plus **live remaining percentage digits** (e.g. icon + `93%`).
+- Loading uses a neutral placeholder (`…`); unavailable may show `—`. Stale/error states use a small status pip. VoiceOver announces remaining percentage and freshness.
 - Click opens a settings/actions menu (not the quota detail).
 - MVP menu actions: floating-widget toggle, launch at login, check for updates, quit.
 - On first launch, both the menu bar item and the floating widget are visible by default.
@@ -47,22 +47,19 @@ At any moment, glance at the desktop or menu bar and understand the remaining we
 ### Floating Widget
 
 - On by default at first launch; always-on-top, draggable, and visible across Spaces.
-- Default collapsed state shows only the weekly percentage and a subtle progress indicator.
-- Click expands in place to the ~320 × 360 detail panel (detail lives on the floating surface, not the menu bar).
+- Collapsed capsule (~92 × 36): **logo + weekly percentage only** (no `剩余` label), centered on transparent liquid glass; left capacity fill shows remaining share.
+- Click expands in place to the ~320 × 372 detail panel (detail lives on the floating surface, not the menu bar).
 - The expanded panel has one top-right collapse control that returns it to the edge-attached compact state without hiding the widget.
-- The compact status dot and remaining-quota progress use battery-like semantic colors: green above 20%, orange from 11% through 20%, red at or below 10%, and gray when freshness is unknown.
+- Capacity fill uses battery-like semantic colors: green when remaining > 50%, orange when > 20% and ≤ 50%, red when ≤ 20%, gray when freshness is unknown.
 - Does not steal keyboard focus during ordinary use.
 - Can be hidden without quitting the app.
 
 ### Detail Panel (floating expanded state)
 
-- Weekly remaining percentage as the single quota metric.
-- Reset absolute date/time plus relative time remaining (e.g. `7 月 20 日 14:30` and `6 天 18 小时后重置`).
-- Plan type when available.
-- Credits status when available.
-- Available rate-limit reset opportunities, shown as `X 次重置机会` when returned by Codex.
-- A `查看` action next to the available reset count opens the official Codex usage page in the default browser.
-- Do not show per-opportunity expiry dates: the current supported local protocol returns only `availableCount`, not individual reset opportunities or their expiration timestamps.
+- Weekly remaining percentage as the single quota metric (attention-colored).
+- **下次重置**: absolute date/time plus relative countdown (e.g. `7 月 20 日 14:30` and `6 天 18 小时后重置`).
+- **当前套餐**: plan type when available.
+- Available rate-limit reset opportunities (`N 次可用`). Per-credit expiry dates when available via optional ChatGPT credits enrichment (in-memory token only); otherwise count-only, never invent dates.
 - Shorter limit windows appear only when the protocol returns them.
 - Reset opportunities are dynamic account data and must never be hardcoded.
 - Optional future section for local daily token history, disabled by default until explicitly included.

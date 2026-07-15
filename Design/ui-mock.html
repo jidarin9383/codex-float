@@ -126,7 +126,7 @@
 
     .widget {
       position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-      width: 138px; height: 40px; border-radius: 999px;
+      width: 92px; height: 36px; border-radius: 999px;
       display: flex; align-items: center; gap: 8px; padding: 0 14px;
       overflow: hidden;
       /* One capsule only — capacity flush to edge, no inset frame gap */
@@ -223,7 +223,7 @@
     .note { margin-top: 12px; font-size: 12px; color: var(--secondary); line-height: 1.45; }
     .swatches { display: flex; gap: 10px; flex-wrap: wrap; }
     .swatch {
-      width: 138px; height: 40px; border-radius: 999px;
+      width: 92px; height: 36px; border-radius: 999px;
       display: flex; align-items: center; gap: 8px; padding: 0 14px;
       overflow: hidden; position: relative;
       background:
@@ -249,13 +249,13 @@
 <body>
   <h1>Codex Float <span class="tag">macOS Tahoe · Liquid Glass</span></h1>
   <p class="sub">
-    菜单栏仅显示额度环图标（无百分比数字）；悬浮窗使用 ultra-thin 玻璃 + 高光描边。
+    菜单栏 = logo + 百分比；悬浮窗 = 短透明玻璃胶囊（logo + 百分比居中）。
     重置行展示绝对日期时间 + 相对倒计时。18% fixture 为系统橙。
   </p>
 
   <div class="grid">
     <section class="card">
-      <h2>菜单栏图标 · 无数字</h2>
+      <h2>菜单栏 · logo + 百分比</h2>
       <div class="desk" style="height: 240px">
         <div class="menubar">
           <div class="mb-icon" style="--accent: var(--orange); --p: 18" title="Codex Float">
@@ -271,7 +271,7 @@
           <div class="row"><span>退出 Codex Float</span><span>⌘Q</span></div>
         </div>
       </div>
-      <p class="note">菜单栏 = 图标 + 操作菜单；百分比只出现在悬浮窗。</p>
+      <p class="note">菜单栏 = logo + 百分比 + 操作菜单；悬浮窗同步展示额度。</p>
     </section>
 
     <section class="card">
@@ -285,10 +285,10 @@
         <div class="widget" style="--accent: var(--orange); --p: 18">
           <img class="logo-mark" src="../Assets/Brand/v2/logo-mark.svg" alt="" />
           <span class="pct">18%</span>
-          <span class="left-label">剩余</span>
+
         </div>
       </div>
-      <p class="note">单层 liquid glass 胶囊；容量色从左铺满剩余比例，未填充区保持透明玻璃，无灰底、无内嵌胶囊。</p>
+      <p class="note">~92×36 透明玻璃胶囊；logo+百分比居中；容量色从左铺满；未填区透明；无「剩余」文案。</p>
     </section>
 
     <section class="card">
@@ -334,15 +334,15 @@
       <div class="swatches">
         <div class="swatch" style="--accent: #3D7A86; --p: 64; --on-fill: #fff; --on-fill-muted: rgba(255,255,255,0.85); --logo-filter: brightness(0) invert(1)">
           <img class="logo-mark" src="../Assets/Brand/v2/logo-mark.svg" alt="" />
-          <span class="pct">64%</span><span class="left-label">剩余</span>
+          <span class="pct">64%</span>
         </div>
         <div class="swatch" style="--accent: var(--orange); --p: 18">
           <img class="logo-mark" src="../Assets/Brand/v2/logo-mark.svg" alt="" />
-          <span class="pct">18%</span><span class="left-label">剩余</span>
+          <span class="pct">18%</span>
         </div>
         <div class="swatch" style="--accent: var(--red); --p: 8">
           <img class="logo-mark" src="../Assets/Brand/v2/logo-mark.svg" alt="" />
-          <span class="pct">8%</span><span class="left-label">剩余</span>
+          <span class="pct">8%</span>
         </div>
         <div class="swatch" style="--accent: var(--gray); --p: 0">
           <img class="logo-mark" src="../Assets/Brand/v2/logo-mark.svg" alt="" />
