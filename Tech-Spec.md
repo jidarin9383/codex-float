@@ -10,7 +10,7 @@
 - In-app **检查更新** uses the public GitHub Releases API (`CodexFloatGitHubRepo` / `owner/repo` injected at package time). No private update feed.
 - **Deferred:** Developer ID signing and notarization (optional later for smoother first-open).
 - No App Store target in the MVP because the app launches the user's local `codex` executable.
-- CI packages **arm64** on `macos-14` runners; Intel users build from source unless a universal binary is added later.
+- CI packages one **universal** `arm64` + `x86_64` archive and verifies both Mach-O slices before signing.
 
 ## Architecture
 

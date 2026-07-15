@@ -53,7 +53,7 @@
 
 ## Packaging (Step 5 / GitHub)
 
-- Package with `./scripts/package-app.sh` → `dist/Codex Float.app` + zip (ad-hoc signed).
+- Package with `./scripts/package-app.sh` → universal `arm64` + `x86_64` `dist/Codex Float.app` + zip (ad-hoc signed).
 - CI/release workflows live under `.github/workflows/`.
 - Inject `CODEX_FLOAT_GITHUB_REPO=owner/repo` for in-app update checks when packaging.
 - Do not commit `/dist`, credentials, or notarization secrets. `Assets/AppIcon.icns` may be generated locally and is optional to commit.

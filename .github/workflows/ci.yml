@@ -33,7 +33,7 @@ jobs:
       - name: Smoke tests
         run: swift run CodexFloatCoreSmokeTests
 
-      - name: Package .app (ad-hoc)
+      - name: Package universal .app (ad-hoc)
         env:
           CODEX_FLOAT_GITHUB_REPO: ${{ github.repository }}
           BUILD_NUMBER: ${{ github.run_number }}
@@ -44,7 +44,7 @@ jobs:
       - name: Upload app artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: CodexFloat-macos
+          name: CodexFloat-macos-universal
           path: |
-            dist/*.zip
+            dist/*-macos-universal.zip
           if-no-files-found: error

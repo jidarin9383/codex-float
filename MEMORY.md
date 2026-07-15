@@ -143,3 +143,9 @@
 - HTTPS enrichment runs after the local snapshot is returned, retries after failure, and caches successful results for 15 minutes.
 - `swift test` is a required CI/contributor gate alongside the smoke executable; repository timing and mapper boundaries have XCTest coverage.
 - Menu-bar quota is a live remaining-percentage ring with explicit current/stale/error accessibility copy. External GitHub Actions are pinned to full commit SHAs.
+
+## 2026-07-15 — Universal macOS distribution
+
+- Supersedes the earlier arm64-only release note: GitHub Releases now publish one `macos-universal.zip` containing `arm64` and `x86_64` slices.
+- `scripts/package-app.sh` uses SwiftPM multi-architecture builds and rejects the package unless `lipo` verifies both slices before signing.
+- Minimum deployment target remains macOS 14 for both Apple Silicon and Intel Macs.

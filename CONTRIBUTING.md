@@ -32,6 +32,8 @@ Thanks for helping improve Codex Float.
    ./scripts/package-app.sh
    ```
 
+   This produces a universal `arm64` + `x86_64` app and `macos-universal.zip` archive.
+
 ## Project rules
 
 - Prefer small native architecture: protocol client → repository → main-actor UI.

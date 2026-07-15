@@ -12,15 +12,15 @@ Codex Float 是一款原生 macOS 小工具。它把 Codex 本周剩余额度放
 
 ## 功能
 
-- **额度一眼可见**：悬浮窗持续显示本周剩余百分比，不用反复打开网页。
-- **安静地待在桌面上**：悬浮窗保持在桌面，也可以随时从菜单栏关闭。
-- **需要时再展开**：点击悬浮窗查看下次重置时间、当前套餐和可用重置机会。
+- **额度一眼可见**：菜单栏图标旁显示百分比；桌面悬浮胶囊同步展示本周剩余。
+- **安静地待在桌面上**：透明玻璃悬浮窗保持在桌面，也可以随时从菜单栏关闭。
+- **需要时再展开**：点击悬浮窗查看下次重置、当前套餐和可用重置机会。
 - **自动保持更新**：应用会自动刷新；数据过期或读取失败时会明确提示，不把旧数据伪装成最新状态。
 - **常用操作集中在菜单栏**：快速控制悬浮窗、开机自启、检查更新或退出应用。
 
 ## 安装
 
-1. 前往 [Releases](https://github.com/jidarin9383/codex-float/releases/latest)，下载最新的 `CodexFloat-*-macos-arm64.zip`。
+1. 前往 [Releases](https://github.com/jidarin9383/codex-float/releases/latest)，下载最新的 `CodexFloat-*-macos-universal.zip`。
 2. 解压后，将 **Codex Float.app** 拖入「应用程序」文件夹。
 3. 打开 Codex Float。应用会自动读取当前 Mac 上的 Codex 额度。
 
@@ -38,18 +38,16 @@ Codex Float 是一款原生 macOS 小工具。它把 Codex 本周剩余额度放
 ## 系统要求
 
 - macOS 14 或更高版本
-- Apple Silicon Mac（当前 Release 提供 `arm64` 安装包）
+- Apple Silicon 或 Intel Mac
 - 已安装并登录 [Codex CLI](https://github.com/openai/codex)
-
-Intel Mac 暂无预编译版本。源码构建与开发说明见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## 使用
 
 - 点击悬浮窗，展开额度详情。
-- 点击详情右上角的收起按钮，返回紧凑悬浮窗。
-- 点击菜单栏中的 Codex Float 图标，控制悬浮窗、开机自启、检查更新或退出应用。
+- 点击详情右上角的收起按钮，返回紧凑悬浮窗（logo + 百分比）。
+- 点击菜单栏中的 Codex Float 图标（含百分比），控制悬浮窗、开机自启、检查更新或退出应用。
 
-首次启动时，菜单栏图标和悬浮窗默认都会显示。
+首次启动时，菜单栏与悬浮窗默认都会显示。悬浮窗填充色：>50% 绿、>20%–50% 橙、≤20% 红。
 
 ## 隐私
 

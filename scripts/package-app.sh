@@ -1,5 +1,5 @@
 #!/bin/zsh
-# Build a distributable Codex Float.app (ad-hoc signed) + zip for GitHub Releases.
+# Build a universal Codex Float.app (ad-hoc signed) + zip for GitHub Releases.
 #
 # Env:
 #   VERSION                  marketing version (default: Info.plist CFBundleShortVersionString)
@@ -44,35 +44,26 @@ if [[ -z "${BUILD_NUMBER:-}" ]]; then
   BUILD_NUMBER="${GITHUB_RUN_NUMBER:-1}"
 fi
 
-ARCH="$(uname -m)"
-case "$ARCH" in
-  arm64) ARCH_LABEL="arm64" ;;
-  x86_64) ARCH_LABEL="x86_64" ;;
-  *) ARCH_LABEL="$ARCH" ;;
-esac
+ARCH_LABEL="universal"
 
 echo "==> Codex Float package"
-echo "    version=$VERSION build=$BUILD_NUMBER config=$CONFIGURATION arch=$ARCH_LABEL"
+echo "    version=$VERSION build=$BUILD_NUMBER config=$CONFIGURATION arch=$ARCH_LABEL (arm64,x86_64)"
 echo "    github_repo=${CODEX_FLOAT_GITHUB_REPO:-"(unset)"}"
 
 echo "→ building $EXEC_NAME ($CONFIGURATION)…"
-if [[ "$CONFIGURATION" == "release" ]]; then
-  swift build -c release --product "$EXEC_NAME"
-  BIN="$ROOT/.build/release/$EXEC_NAME"
-else
-  swift build -c debug --product "$EXEC_NAME"
-  BIN="$ROOT/.build/debug/$EXEC_NAME"
-fi
-
-if [[ ! -x "$BIN" ]]; then
-  # SPM may nest under triple directory.
-  BIN="$(find "$ROOT/.build" -type f -name "$EXEC_NAME" -path "*/$CONFIGURATION/*" | head -1)"
-fi
+swift build -c "$CONFIGURATION" --arch arm64 --arch x86_64 --product "$EXEC_NAME"
+BIN_DIR="$(swift build -c "$CONFIGURATION" --arch arm64 --arch x86_64 --show-bin-path)"
+BIN="$BIN_DIR/$EXEC_NAME"
 if [[ ! -x "$BIN" ]]; then
   echo "error: built binary not found" >&2
   exit 1
 fi
+if ! lipo "$BIN" -verify_arch arm64 x86_64; then
+  echo "error: built binary is not universal (arm64 + x86_64)" >&2
+  exit 1
+fi
 echo "    binary=$BIN"
+echo "    slices=$(lipo -archs "$BIN")"
 
 if [[ "${SKIP_ICON:-0}" != "1" ]] || [[ ! -f "$ICON_ICNS" ]]; then
   echo "→ generating AppIcon.icns…"

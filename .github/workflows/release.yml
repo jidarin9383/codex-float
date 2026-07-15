@@ -34,7 +34,7 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
-      - name: Package .app
+      - name: Package universal .app
         env:
           VERSION: ${{ steps.ver.outputs.version }}
           BUILD_NUMBER: ${{ github.run_number }}
@@ -49,5 +49,5 @@ jobs:
           tag_name: ${{ steps.ver.outputs.tag }}
           name: Codex Float ${{ steps.ver.outputs.version }}
           files: |
-            dist/*.zip
+            dist/CodexFloat-${{ steps.ver.outputs.version }}-macos-universal.zip
           fail_on_unmatched_files: true
