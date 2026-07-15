@@ -36,12 +36,15 @@ let package = Package(
                 ], .when(platforms: [.macOS]))
             ]
         ),
-        // Full XCTest suite needs Xcode. Until then, use:
-        //   swift run CodexFloatCoreSmokeTests
         .executableTarget(
             name: "CodexFloatCoreSmokeTests",
             dependencies: ["CodexFloatCore"],
             path: "Tests/CodexFloatCoreSmokeTests"
+        ),
+        .testTarget(
+            name: "CodexFloatCoreTests",
+            dependencies: ["CodexFloatCore"],
+            path: "Tests/CodexFloatCoreTests"
         )
     ]
 )

@@ -2,6 +2,11 @@ import Foundation
 
 /// Owns refresh policy, stale-state, retry backoff, and last successful snapshot.
 public actor QuotaRepository {
+    private static let enrichmentCacheDuration: TimeInterval = 15 * 60
+
+    public typealias RateLimitsFetcher = @Sendable () async throws -> WireGetAccountRateLimitsResponse
+    public typealias ResetCreditsFetcher = @Sendable () async throws -> ResetCreditsDetail
+
     public struct Preferences: Sendable {
         public var executableOverride: URL?
         public var staleThreshold: TimeInterval
@@ -28,18 +33,34 @@ public actor QuotaRepository {
 
     private var preferences: Preferences
     private var client: CodexAppServerClient?
-    private let creditsClient: ChatGPTQuotaClient
+    private let rateLimitsFetcher: RateLimitsFetcher?
+    private let resetCreditsFetcher: ResetCreditsFetcher
     private var backoff = RetryBackoff()
     private var lastSuccess: QuotaSnapshot?
     private var refreshInFlight = false
     private var lastAttemptAt: Date?
+    private var cachedResetCreditExpirations: [Date] = []
+    private var lastEnrichmentSuccessAt: Date?
+    private var enrichmentTask: Task<Void, Never>?
 
     public init(
         preferences: Preferences = .init(),
         creditsClient: ChatGPTQuotaClient = ChatGPTQuotaClient()
     ) {
         self.preferences = preferences
-        self.creditsClient = creditsClient
+        self.rateLimitsFetcher = nil
+        self.resetCreditsFetcher = { try await creditsClient.fetchResetCredits() }
+    }
+
+    /// Injectable boundary for deterministic repository tests without launching `codex` or HTTPS.
+    public init(
+        preferences: Preferences = .init(),
+        rateLimitsFetcher: @escaping RateLimitsFetcher,
+        resetCreditsFetcher: @escaping ResetCreditsFetcher
+    ) {
+        self.preferences = preferences
+        self.rateLimitsFetcher = rateLimitsFetcher
+        self.resetCreditsFetcher = resetCreditsFetcher
     }
 
     public func updatePreferences(_ preferences: Preferences) {
@@ -104,21 +125,28 @@ public actor QuotaRepository {
         lastAttemptAt = now
 
         do {
-            let client = try await ensureClient()
-            let wire = try await client.readRateLimits()
+            let wire: WireGetAccountRateLimitsResponse
+            if let rateLimitsFetcher {
+                wire = try await rateLimitsFetcher()
+            } else {
+                let client = try await ensureClient()
+                wire = try await client.readRateLimits()
+            }
             var snapshot = RateLimitsMapper.snapshot(from: wire, fetchedAt: now, freshness: .current)
             // Prefer truthful empty-weekly state over inventing a short window.
             if snapshot.remainingPercent == nil {
                 snapshot.statusMessage = "未返回本周额度窗口"
                 snapshot.freshness = .current
             }
-            // Enrich reset opportunities with per-credit expiry when auth + HTTPS succeed.
-            // Failures are non-fatal: keep app-server count-only rows.
-            if let detail = try? await creditsClient.fetchResetCredits() {
-                snapshot = RateLimitsMapper.merging(snapshot, resetCredits: detail)
+            if !cachedResetCreditExpirations.isEmpty {
+                snapshot = RateLimitsMapper.merging(
+                    snapshot,
+                    resetCredits: ResetCreditsDetail(expiresAt: cachedResetCreditExpirations)
+                )
             }
             lastSuccess = snapshot
             backoff.registerSuccess()
+            startEnrichmentIfNeeded(now: now)
             return snapshot
         } catch let error as AppServerClientError {
             // Drop dead process so the next attempt relaunches cleanly.
@@ -158,6 +186,8 @@ public actor QuotaRepository {
     }
 
     public func shutdown() async {
+        enrichmentTask?.cancel()
+        enrichmentTask = nil
         await client?.shutdown()
         client = nil
     }
@@ -174,6 +204,37 @@ public actor QuotaRepository {
         let created = CodexAppServerClient(executableURL: url)
         self.client = created
         return created
+    }
+
+    private func startEnrichmentIfNeeded(now: Date) {
+        guard enrichmentTask == nil else { return }
+        if let lastEnrichmentSuccessAt,
+           now.timeIntervalSince(lastEnrichmentSuccessAt) < Self.enrichmentCacheDuration {
+            return
+        }
+
+        let resetCreditsFetcher = self.resetCreditsFetcher
+        enrichmentTask = Task { [weak self] in
+            do {
+                let detail = try await resetCreditsFetcher()
+                await self?.finishEnrichment(detail, succeededAt: now)
+            } catch {
+                await self?.finishEnrichment(nil, succeededAt: nil)
+            }
+        }
+    }
+
+    private func finishEnrichment(_ detail: ResetCreditsDetail?, succeededAt: Date?) {
+        defer { enrichmentTask = nil }
+        guard let detail, let succeededAt else { return }
+
+        lastEnrichmentSuccessAt = succeededAt
+        cachedResetCreditExpirations = detail.expiresAt.sorted()
+        guard let lastSuccess else { return }
+        self.lastSuccess = RateLimitsMapper.merging(
+            lastSuccess,
+            resetCredits: ResetCreditsDetail(expiresAt: cachedResetCreditExpirations)
+        )
     }
 
     private func failureSnapshot(error: AppServerClientError, now: Date) -> QuotaSnapshot {

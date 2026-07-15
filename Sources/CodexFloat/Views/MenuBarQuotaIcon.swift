@@ -2,8 +2,8 @@ import AppKit
 import SwiftUI
 import CodexFloatCore
 
-/// Menu bar uses a **template monochrome** app logo (system-tinted).
-/// Accessibility still announces remaining quota.
+/// Menu bar uses a **template monochrome** remaining-quota ring (system-tinted).
+/// Accessibility announces both remaining quota and freshness.
 ///
 /// Important: `MenuBarExtra` is unreliable with `Canvas` + multi-color SwiftUI views.
 /// We rasterize a pure black 18×18 template `NSImage` so macOS always shows the glyph.
@@ -16,13 +16,13 @@ struct MenuBarQuotaIcon: View {
             Text(CodexFloatTheme.productName)
         } icon: {
             ZStack(alignment: .bottomTrailing) {
-                Image(nsImage: Self.templateLogo)
+                Image(nsImage: Self.templateLogo(remainingPercent: visibleRemainingPercent))
                     .renderingMode(.template)
                     .resizable()
                     .interpolation(.high)
                     .frame(width: 18, height: 18)
 
-                // Status pip only — kept outside the template image.
+                // Freshness pip stays outside the template image so color remains visible.
                 if snapshot.freshness == .error {
                     Circle()
                         .fill(Color(nsColor: .systemOrange))
@@ -32,6 +32,11 @@ struct MenuBarQuotaIcon: View {
                     Circle()
                         .fill(Color.primary.opacity(0.45))
                         .frame(width: 4, height: 4)
+                        .offset(x: 1, y: 1)
+                } else if snapshot.freshness == .stale {
+                    Circle()
+                        .fill(Color(nsColor: .systemYellow))
+                        .frame(width: 5, height: 5)
                         .offset(x: 1, y: 1)
                 }
             }
@@ -44,14 +49,18 @@ struct MenuBarQuotaIcon: View {
     }
 
     private var accessibilityLabel: String {
-        if let remaining = snapshot.remainingPercent, snapshot.freshness != .loading {
-            return "\(CodexFloatTheme.productName) 剩余 \(QuotaMath.formatPercent(remaining))"
-        }
-        return snapshot.statusMessage ?? CodexFloatTheme.productName
+        QuotaAccessibility.menuBarLabel(
+            productName: CodexFloatTheme.productName,
+            snapshot: snapshot
+        )
     }
 
-    /// Black-on-clear 18×18 template matching `Assets/Brand/v2/menubar-template.svg`.
-    private static let templateLogo: NSImage = {
+    private var visibleRemainingPercent: Double? {
+        snapshot.freshness == .loading ? nil : snapshot.remainingPercent
+    }
+
+    /// Black-on-clear 18×18 template matching the brand silhouette with a live quota arc.
+    private static func templateLogo(remainingPercent: Double?) -> NSImage {
         let size = NSSize(width: 18, height: 18)
         let image = NSImage(size: size, flipped: false) { rect in
             guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
@@ -70,18 +79,34 @@ struct MenuBarQuotaIcon: View {
             track.lineCapStyle = .round
             track.stroke()
 
-            // Progress ~1/3 from 12 o'clock clockwise to ~30°
-            let progress = NSBezierPath()
-            progress.appendArc(
-                withCenter: center,
-                radius: 5.55,
-                startAngle: 90,   // AppKit: 0° = east, positive CCW; 90° = north
-                endAngle: -30,    // ≈ 30° past east going clockwise from north ≈ 120° of arc
-                clockwise: true
-            )
-            progress.lineWidth = 1.55
-            progress.lineCapStyle = .round
-            progress.stroke()
+            if let remainingPercent {
+                let fraction = min(1, max(0, remainingPercent / 100))
+                if fraction > 0 {
+                    let progress: NSBezierPath
+                    if fraction == 1 {
+                        progress = NSBezierPath(
+                            ovalIn: CGRect(
+                                x: center.x - 5.55,
+                                y: center.y - 5.55,
+                                width: 11.1,
+                                height: 11.1
+                            )
+                        )
+                    } else {
+                        progress = NSBezierPath()
+                        progress.appendArc(
+                            withCenter: center,
+                            radius: 5.55,
+                            startAngle: 90,
+                            endAngle: 90 - (360 * fraction),
+                            clockwise: true
+                        )
+                    }
+                    progress.lineWidth = 1.75
+                    progress.lineCapStyle = .round
+                    progress.stroke()
+                }
+            }
 
             // Solid disc with `>` hole (even-odd)
             let disc = NSBezierPath(
@@ -115,5 +140,5 @@ struct MenuBarQuotaIcon: View {
         }
         image.isTemplate = true
         return image
-    }()
+    }
 }

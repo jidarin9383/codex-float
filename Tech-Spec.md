@@ -39,9 +39,12 @@ MenuBarExtra / Floating NSPanel / Detail Popover
 - Selects the `codex` entry from `rateLimitsByLimitId` when present.
 - Falls back to the backward-compatible `rateLimits` snapshot.
 - Normalizes used percentage into remaining percentage without relabeling unknown windows.
+- Populates top-level weekly fields only from an exact 10,080-minute window; short or duration-unknown windows remain secondary data.
 - Owns refresh policy, stale-state calculation, retry backoff, and last successful snapshot.
 - Emits a domain model that contains only UI-safe, non-secret data.
 - Maps `rateLimitResetCredits.availableCount` into an optional reset-opportunity count for the detail view.
+- Treats the app-server reset count as authoritative and accepts only `0...100` before creating display rows.
+- Publishes app-server snapshots without awaiting optional HTTPS expiry enrichment; enrichment is cached for 15 minutes and may add dates only.
 
 ### `LocalSampleStore`
 
@@ -51,7 +54,7 @@ MenuBarExtra / Floating NSPanel / Detail Popover
 
 ### Presentation
 
-- `MenuBarExtra` provides a persistent **icon-only** menu bar glyph (remaining-quota ring, no digits) and a settings/actions menu (not the quota detail). MVP menu: floating-widget toggle, launch at login, check for updates, quit.
+- `MenuBarExtra` provides a persistent **icon-only** menu bar glyph whose ring arc reflects weekly remaining quota (no digits) and a settings/actions menu (not the quota detail). Missing quota has no arc; stale/error states use an additional status marker. MVP menu: floating-widget toggle, launch at login, check for updates, quit.
 - A borderless, non-activating `NSPanel` provides the floating widget (on by default at first launch). Click expands the panel in place to the detail layout (~320 × 360).
 - Panel behavior: `canJoinAllSpaces`, `fullScreenAuxiliary`, no Dock icon, remembers position per display, and avoids stealing focus.
 - SwiftUI renders menu bar, widget, detail, and all states from one observable store.
@@ -102,7 +105,7 @@ MenuBarExtra / Floating NSPanel / Detail Popover
 
 All fields except the response container are treated as version-sensitive and decoded defensively. Unknown fields are ignored. Missing windows, plan metadata, credits, reset opportunities, and reset timestamps are valid states.
 
-`RateLimitResetCreditsSummary` currently contains only `availableCount`. The app must not infer or display per-opportunity expiry dates unless a future supported protocol version adds those fields.
+`RateLimitResetCreditsSummary.availableCount` is the authoritative reset-opportunity count. Optional ChatGPT HTTPS enrichment may attach expiry dates to those rows but must never replace the count, create extra rows, or delay publication of app-server quota data.
 
 ## Executable Discovery
 
@@ -125,7 +128,7 @@ The selected path is persisted as a bookmark or plain non-secret preference as a
 
 ## Security and Privacy
 
-- Never read `~/.codex` credential content.
+- Read `CODEX_HOME/auth.json` or `~/.codex/auth.json` only for request-local ChatGPT expiry enrichment. Never log, persist, or place token/account values in process arguments.
 - Never pass credentials or tokens through command-line arguments.
 - Never log full protocol payloads in release builds because future fields may contain account metadata.
 - Redact executable paths and errors before optional diagnostic export.
@@ -134,7 +137,7 @@ The selected path is persisted as a bookmark or plain non-secret preference as a
 
 ## Test Strategy
 
-- Unit tests: JSONL splitting, interleaved notifications, request correlation, timeout, malformed JSON, process exit, nullable fields, multi-limit selection, percentage normalization, reset formatting, stale calculation, and backoff.
+- XCTest (`swift test`): JSONL splitting, interleaved notifications, request correlation, timeout, malformed JSON, process exit, nullable fields, multi-limit selection, exact-weekly selection, count bounds and authority, percentage normalization, reset formatting, stale calculation, and backoff.
 - Integration test: launch the real local `codex app-server` only behind an explicit developer flag; never run in normal CI.
 - Static UI tests: fixed current, stale, error, 0%, 100%, long plan name, missing reset time, and multiple-window fixtures.
 - Visual QA: light/dark, 1x/2x display, multiple Spaces, full-screen auxiliary behavior, multiple displays, and localization overflow.

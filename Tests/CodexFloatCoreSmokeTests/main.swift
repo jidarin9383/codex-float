@@ -145,15 +145,15 @@ enum Smoke {
         try expect(snapshot.windows.count == 1, "do not invent secondary window")
         try expect(snapshot.windows.first?.isWeekly == true, "weekly flag from 10080 mins")
 
-        // Missing weekly-only secondary is fine; primary without duration still accepted.
+        // A duration-unknown primary remains visible as a window but is never relabeled weekly.
         let noDuration = WireGetAccountRateLimitsResponse(
             rateLimits: WireRateLimitSnapshot(
                 primary: WireRateLimitWindow(usedPercent: 50)
             )
         )
         let mapped = RateLimitsMapper.snapshot(from: noDuration)
-        try expect(mapped.remainingPercent == 50, "remaining without duration")
-        try expect(mapped.windows.first?.isWeekly == true, "sole primary treated as weekly fallback")
+        try expect(mapped.remainingPercent == nil, "missing weekly duration has no top-level value")
+        try expect(mapped.windows.first?.isWeekly == false, "sole primary is not a weekly fallback")
 
         // Credits HTTPS enrichment (sample JSON only — never real tokens).
         let creditsJSON: [String: Any] = [
@@ -167,8 +167,9 @@ enum Smoke {
         try expect(expires.count == 2, "two expiry dates collected")
         let merged = RateLimitsMapper.merging(
             snapshot,
-            resetCredits: ResetCreditsDetail(availableCount: 2, expiresAt: expires.sorted())
+            resetCredits: ResetCreditsDetail(availableCount: 9, expiresAt: expires.sorted())
         )
+        try expect(merged.resetOpportunityCount == 2, "app-server count stays authoritative")
         try expect(merged.resetOpportunities.count == 2, "merged rows")
         try expect(merged.resetOpportunities[0].expiresAt != nil, "first row has date")
         try expect(merged.resetOpportunities[1].expiresAt != nil, "second row has date")

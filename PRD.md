@@ -38,8 +38,8 @@ At any moment, glance at the desktop or menu bar and understand the remaining we
 
 ### Menu Bar
 
-- Shows a compact **icon only** (remaining-quota ring). Does not show percentage digits in the menu bar.
-- Icon uses semantic color for attention; VoiceOver still announces the remaining percentage.
+- Shows a compact **icon only** whose ring arc reflects the current weekly remaining percentage. Does not show percentage digits in the menu bar.
+- Loading and unavailable states show no quota arc; stale/error states have a visible status marker. VoiceOver announces both the remaining percentage and freshness.
 - Click opens a settings/actions menu (not the quota detail).
 - MVP menu actions: floating-widget toggle, launch at login, check for updates, quit.
 - On first launch, both the menu bar item and the floating widget are visible by default.

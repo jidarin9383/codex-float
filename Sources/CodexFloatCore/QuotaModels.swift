@@ -128,6 +128,27 @@ public enum QuotaMath {
     }
 }
 
+/// Accessibility copy for compact surfaces that cannot show freshness as text.
+public enum QuotaAccessibility {
+    public static func menuBarLabel(productName: String, snapshot: QuotaSnapshot) -> String {
+        guard let remaining = snapshot.remainingPercent, snapshot.freshness != .loading else {
+            return snapshot.statusMessage ?? productName
+        }
+
+        let value = "\(productName) 剩余 \(QuotaMath.formatPercent(remaining))"
+        switch snapshot.freshness {
+        case .current:
+            return "\(value)，数据最新"
+        case .stale:
+            return "\(value)，数据可能不是最新"
+        case .error:
+            return "\(value)，\(snapshot.statusMessage ?? "读取失败")"
+        case .loading:
+            return snapshot.statusMessage ?? productName
+        }
+    }
+}
+
 public enum ResetTimeFormatting {
     /// Relative Chinese label such as `6 天 18 小时后重置`.
     public static func relativeResetLabel(until date: Date, now: Date = .now) -> String {

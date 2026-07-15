@@ -128,3 +128,11 @@
 - Keep design boards, UI debugging, architecture diagrams, implementation progress, test commands, and release-maintainer commands out of the homepage; development setup belongs in `CONTRIBUTING.md`.
 - Because the GitHub release is not notarized, the primary Gatekeeper recovery path is `System Settings → Privacy & Security → Security → Open Anyway`, matching Apple guidance. Users should be told to download only from this repository's Releases page.
 - The current prebuilt GitHub release is Apple Silicon (`arm64`); Intel users must build from source until a separate artifact is published.
+
+## 2026-07-15 — First audit repair batch
+
+- Weekly top-level quota is derived only from an exact `10_080`-minute window; short or unknown windows remain visible but never masquerade as weekly.
+- `codex app-server` owns reset-credit count, bounded to `0...100` before row allocation. HTTPS may enrich expiry dates only.
+- HTTPS enrichment runs after the local snapshot is returned, retries after failure, and caches successful results for 15 minutes.
+- `swift test` is a required CI/contributor gate alongside the smoke executable; repository timing and mapper boundaries have XCTest coverage.
+- Menu-bar quota is a live remaining-percentage ring with explicit current/stale/error accessibility copy. External GitHub Actions are pinned to full commit SHAs.

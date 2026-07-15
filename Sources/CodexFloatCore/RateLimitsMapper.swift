@@ -8,6 +8,9 @@ public enum RateLimitsMapper {
     /// Preferred limit bucket when multi-limit maps are present.
     public static let preferredLimitID = "codex"
 
+    /// Defensive product-domain ceiling applied before creating one row per credit.
+    public static let maximumResetOpportunityCount = 100
+
     public static func snapshot(
         from response: WireGetAccountRateLimitsResponse,
         fetchedAt: Date = .now,
@@ -15,9 +18,9 @@ public enum RateLimitsMapper {
     ) -> QuotaSnapshot {
         let selected = selectSnapshot(from: response)
         let windows = makeWindows(from: selected)
-        let weekly = windows.first(where: \.isWeekly) ?? windows.first
+        let weekly = windows.first(where: \.isWeekly)
 
-        let count = response.rateLimitResetCredits.map { Int($0.availableCount) }
+        let count = validatedResetOpportunityCount(response.rateLimitResetCredits?.availableCount)
         return QuotaSnapshot(
             remainingPercent: weekly.map { QuotaMath.remaining(fromUsedPercent: $0.usedPercent) },
             planType: displayPlanType(selected.planType),
@@ -37,14 +40,14 @@ public enum RateLimitsMapper {
         resetCredits: ResetCreditsDetail
     ) -> QuotaSnapshot {
         var next = snapshot
-        let count = resetCredits.availableCount ?? snapshot.resetOpportunityCount
+        let count = validatedResetOpportunityCount(snapshot.resetOpportunityCount)
         next.resetOpportunityCount = count
         next.resetOpportunities = opportunities(count: count, expiresAt: resetCredits.expiresAt)
         return next
     }
 
     public static func opportunities(count: Int?, expiresAt: [Date]) -> [ResetOpportunity] {
-        guard let count, count > 0 else { return [] }
+        guard let count = validatedResetOpportunityCount(count), count > 0 else { return [] }
         return (1...count).map { index in
             let expiry = index - 1 < expiresAt.count ? expiresAt[index - 1] : nil
             return ResetOpportunity(index: index, expiresAt: expiry)
@@ -71,8 +74,7 @@ public enum RateLimitsMapper {
             windows.append(
                 window(
                     id: "primary",
-                    from: primary,
-                    fallbackWeekly: snapshot.secondary == nil
+                    from: primary
                 )
             )
         }
@@ -81,8 +83,7 @@ public enum RateLimitsMapper {
             windows.append(
                 window(
                     id: "secondary",
-                    from: secondary,
-                    fallbackWeekly: false
+                    from: secondary
                 )
             )
         }
@@ -107,10 +108,9 @@ public enum RateLimitsMapper {
 
     private static func window(
         id: String,
-        from wire: WireRateLimitWindow,
-        fallbackWeekly: Bool
+        from wire: WireRateLimitWindow
     ) -> QuotaWindow {
-        let weekly = isWeekly(windowDurationMins: wire.windowDurationMins) || fallbackWeekly
+        let weekly = isWeekly(windowDurationMins: wire.windowDurationMins)
         let resetsAt = wire.resetsAt.map { Date(timeIntervalSince1970: TimeInterval($0)) }
         let remaining = QuotaMath.remaining(fromUsedPercent: wire.usedPercent)
         return QuotaWindow(
@@ -121,6 +121,20 @@ public enum RateLimitsMapper {
             resetsAt: resetsAt,
             isWeekly: weekly
         )
+    }
+
+    private static func validatedResetOpportunityCount(_ value: Int64?) -> Int? {
+        guard let value, value >= 0, value <= Int64(maximumResetOpportunityCount) else {
+            return nil
+        }
+        return Int(value)
+    }
+
+    private static func validatedResetOpportunityCount(_ value: Int?) -> Int? {
+        guard let value, (0...maximumResetOpportunityCount).contains(value) else {
+            return nil
+        }
+        return value
     }
 
     private static func displayPlanType(_ raw: String?) -> String? {

@@ -13,9 +13,10 @@ Thanks for helping improve Codex Float.
    ./scripts/open-xcode.sh
    ```
 
-3. Run smoke tests:
+3. Run unit and smoke tests:
 
    ```bash
+   swift test
    swift run CodexFloatCoreSmokeTests
    ```
 
@@ -46,7 +47,7 @@ Sources of truth: `PRD.md`, `Tech-Spec.md`, `DESIGN.md`, `AGENTS.md`.
 ## Pull requests
 
 1. Keep PRs focused and reversible.
-2. Run `swift build` and `swift run CodexFloatCoreSmokeTests` before opening a PR.
+2. Run `swift build`, `swift test`, and `swift run CodexFloatCoreSmokeTests` before opening a PR.
 3. Describe what changed and why; link related issues.
 4. Do not commit `.build/`, `dist/`, credentials, or local quota history.
 
