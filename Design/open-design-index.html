@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Codex Float — Brand v2 Float Glass</title>
+<style>
+  :root {
+    --bg: #F0F4F8;
+    --surface: #FFFFFF;
+    --fg: #1A2332;
+    --fg2: #5A6B7D;
+    --fg3: #94A3B5;
+    --accent: #10A37F;
+    --glass-light: rgba(255,255,255,0.72);
+    --border: rgba(0,0,0,0.06);
+    --radius: 20px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; min-height: 100vh; }
+  body {
+    font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: linear-gradient(165deg, #E8F0FA 0%, #D4E4F4 35%, #C6D8EC 70%, #B8CCE0 100%);
+    color: var(--fg);
+    padding: 64px 48px;
+    line-height: 1.5;
+  }
+
+  /* Page title */
+  .page-header {
+    max-width: 1120px;
+    margin: 0 auto 56px;
+  }
+  .page-header h1 {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--fg3);
+    margin-bottom: 8px;
+  }
+  .page-header .title {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--fg);
+  }
+  .page-header .subtitle {
+    font-size: 15px;
+    color: var(--fg2);
+    margin-top: 6px;
+  }
+
+  /* Hero section */
+  .hero {
+    max-width: 1120px;
+    margin: 0 auto 48px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 12px 48px rgba(0,0,0,0.06);
+    padding: 80px 64px;
+    display: flex;
+    align-items: center;
+    gap: 72px;
+  }
+  .hero-icon {
+    flex-shrink: 0;
+    width: 280px;
+    height: 280px;
+    border-radius: 64px;
+    overflow: hidden;
+    box-shadow: 0 24px 64px rgba(90,120,150,0.18), 0 4px 12px rgba(0,0,0,0.06);
+  }
+  .hero-icon svg { width: 100%; height: 100%; display: block; }
+  .hero-text { flex: 1; }
+  .hero-text .wordmark {
+    font-size: 48px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--fg);
+    margin-bottom: 12px;
+  }
+  .hero-text .wordmark span {
+    color: var(--accent);
+  }
+  .hero-text .tagline {
+    font-size: 18px;
+    color: var(--fg2);
+    line-height: 1.6;
+    max-width: 440px;
+  }
+  .hero-text .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 20px;
+    padding: 6px 14px;
+    background: rgba(16,163,127,0.08);
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+  }
+
+  /* Grid row */
+  .grid-row {
+    max-width: 1120px;
+    margin: 0 auto 48px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.05);
+    padding: 40px;
+  }
+  .card-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--fg3);
+    margin-bottom: 24px;
+  }
+
+  /* Menu bar mock */
+  .menubar-mock {
+    background: linear-gradient(180deg, #3A4A5C 0%, #2E3E4E 100%);
+    border-radius: 10px;
+    padding: 8px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .menubar-mock::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 100%);
+    border-radius: 10px;
+  }
+  .menubar-items {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-left: auto;
+  }
+  .menubar-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+  }
+  .menubar-text {
+    font-size: 11px;
+    color: rgba(255,255,255,0.65);
+    font-weight: 500;
+  }
+  .menubar-glyph {
+    width: 18px; height: 18px;
+  }
+  .menubar-glyph svg {
+    width: 18px; height: 18px;
+    display: block;
+  }
+  .menubar-glyph svg path,
+  .menubar-glyph svg ellipse {
+    fill: #FFFFFF;
+    stroke: #FFFFFF;
+  }
+  .menubar-note {
+    font-size: 12px;
+    color: var(--fg2);
+    margin-top: 16px;
+    line-height: 1.5;
+  }
+
+  /* Size ladder */
+  .size-ladder {
+    display: flex;
+    align-items: flex-end;
+    gap: 32px;
+  }
+  .size-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .size-item .mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .size-item .mark svg { display: block; }
+  .size-item .dim {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--fg3);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Full width card */
+  .full-card {
+    max-width: 1120px;
+    margin: 0 auto 48px;
+  }
+
+  /* Mark variants */
+  .mark-variants {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+  }
+  .mark-variant {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .mark-variant .swatch {
+    width: 120px;
+    height: 120px;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+  }
+  .mark-variant .swatch.light { background: #FFFFFF; }
+  .mark-variant .swatch.dark { background: #1A2332; }
+  .mark-variant .swatch.glass {
+    background: linear-gradient(135deg, rgba(255,255,255,0.45), rgba(200,220,240,0.35));
+    backdrop-filter: blur(12px);
+  }
+  .mark-variant .swatch svg { width: 56px; height: 56px; }
+  .mark-variant .label {
+    font-size: 11px;
+    color: var(--fg3);
+    font-weight: 500;
+  }
+
+  /* Footnote */
+  .footnote-card {
+    max-width: 1120px;
+    margin: 0 auto;
+    background: rgba(255,255,255,0.6);
+    border-radius: 14px;
+    border: 1px solid rgba(0,0,0,0.04);
+    padding: 28px 36px;
+    display: flex;
+    align-items: flex-start;
+    gap: 32px;
+  }
+  .footnote-card .v1-ref {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: #1A2332;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .footnote-card .v1-ref svg { width: 32px; height: 32px; }
+  .footnote-body { flex: 1; }
+  .footnote-body .fn-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fg);
+    margin-bottom: 4px;
+  }
+  .footnote-body .fn-text {
+    font-size: 13px;
+    color: var(--fg2);
+    line-height: 1.6;
+  }
+
+  /* data-od-id for inspectability */
+  [data-od-id] { position: relative; }
+</style>
+</head>
+<body>
+
+<!-- Page header -->
+<header class="page-header" data-od-id="page-header">
+  <h1>Brand System</h1>
+  <div class="title">Codex Float — Brand v2 Float Glass</div>
+  <div class="subtitle">Tahoe liquid glass 语言 · 浮动轻盈 · 圆润通透</div>
+</header>
+
+<!-- Hero: app icon + wordmark -->
+<section class="hero" data-od-id="hero-section">
+  <div class="hero-icon" data-od-id="hero-app-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+      <defs>
+        <linearGradient id="tile" x1="120" y1="40" x2="900" y2="980" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#F4F7FB"/>
+          <stop offset="0.45" stop-color="#E7EEF6"/>
+          <stop offset="1" stop-color="#D5E0EC"/>
+        </linearGradient>
+        <linearGradient id="tileSheen" x1="200" y1="80" x2="700" y2="500" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#FFFFFF" stop-opacity="0.75"/>
+          <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+        </linearGradient>
+        <radialGradient id="orbBody" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(430 360) rotate(90) scale(280 280)">
+          <stop stop-color="#FFFFFF" stop-opacity="0.95"/>
+          <stop offset="0.45" stop-color="#E8F4FF" stop-opacity="0.72"/>
+          <stop offset="0.78" stop-color="#B9D4F0" stop-opacity="0.55"/>
+          <stop offset="1" stop-color="#8FB4D8" stop-opacity="0.42"/>
+        </radialGradient>
+        <radialGradient id="orbCore" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(500 470) rotate(90) scale(120 120)">
+          <stop stop-color="#10A37F" stop-opacity="0.35"/>
+          <stop offset="1" stop-color="#10A37F" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="orbStroke" x1="300" y1="260" x2="700" y2="700" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#FFFFFF" stop-opacity="0.95"/>
+          <stop offset="0.4" stop-color="#FFFFFF" stop-opacity="0.35"/>
+          <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.15"/>
+        </linearGradient>
+        <filter id="floatShadow" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="28" result="b"/>
+          <feOffset dy="18"/>
+          <feColorMatrix type="matrix" values="0 0 0 0 0.25  0 0 0 0 0.35  0 0 0 0 0.45  0 0 0 0.18 0"/>
+        </filter>
+        <filter id="softBlur" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="6"/>
+        </filter>
+      </defs>
+      <rect x="64" y="64" width="896" height="896" rx="240" fill="url(#tile)"/>
+      <rect x="64" y="64" width="896" height="896" rx="240" fill="url(#tileSheen)"/>
+      <rect x="64" y="64" width="896" height="896" rx="240" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="3"/>
+      <ellipse cx="512" cy="730" rx="210" ry="48" fill="#6B8AAB" opacity="0.14" filter="url(#softBlur)"/>
+      <ellipse cx="512" cy="726" rx="160" ry="28" fill="#FFFFFF" opacity="0.55"/>
+      <ellipse cx="520" cy="700" rx="150" ry="36" fill="#5B7C9A" opacity="0.16" filter="url(#floatShadow)"/>
+      <circle cx="512" cy="460" r="210" fill="url(#orbBody)"/>
+      <circle cx="512" cy="460" r="210" fill="url(#orbCore)"/>
+      <circle cx="512" cy="460" r="210" stroke="url(#orbStroke)" stroke-width="8" fill="none"/>
+      <path d="M390 330 C430 280 560 270 610 330 C560 320 470 325 390 330 Z" fill="#FFFFFF" opacity="0.72"/>
+      <ellipse cx="430" cy="390" rx="48" ry="28" fill="#FFFFFF" opacity="0.55" transform="rotate(-28 430 390)"/>
+      <circle cx="560" cy="500" r="10" fill="#10A37F" opacity="0.55"/>
+      <circle cx="560" cy="500" r="4" fill="#FFFFFF" opacity="0.9"/>
+    </svg>
+  </div>
+  <div class="hero-text" data-od-id="hero-wordmark">
+    <div class="wordmark">Codex <span>Float</span></div>
+    <div class="tagline">轻盈浮动的玻璃球体，Tahoe liquid glass 设计语言。<br>主读取：通透圆润的浮空球，而非代码芯片。</div>
+    <div class="badge">
+      <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="5" fill="#10A37F"/></svg>
+      FLOAT GLASS · v2
+    </div>
+  </div>
+</section>
+
+<!-- Row: Menu bar + Size ladder -->
+<div class="grid-row">
+  <!-- Menu bar mock -->
+  <div class="card" data-od-id="menubar-card">
+    <div class="card-label">菜单栏图标 · Menu Bar</div>
+    <div class="menubar-mock">
+      <div class="menubar-text">Codex Float</div>
+      <div class="menubar-items">
+        <div class="menubar-dot"></div>
+        <div class="menubar-dot"></div>
+        <div class="menubar-glyph" data-od-id="menubar-glyph">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path fill="#FFFFFF" fill-rule="evenodd" d="
+              M9 2.15
+              a5.05 5.05 0 1 1 0 10.1
+              a5.05 5.05 0 1 1 0 -10.1
+              z
+              M6.9 4.55
+              a1.55 1.0 0 1 0 2.9 -0.95
+              a1.55 1.0 0 1 0 -2.9 0.95
+              z
+            "/>
+            <path d="M4.1 14.55 C6.6 16.15 11.4 16.15 13.9 14.55" stroke="#FFFFFF" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+            <ellipse cx="9" cy="15.55" rx="1.2" ry="0.55" fill="#FFFFFF"/>
+          </svg>
+        </div>
+        <div class="menubar-dot"></div>
+      </div>
+    </div>
+    <div class="menubar-note">18pt 白色模板图标 — 浮空球体轮廓 + 地面弧线，非百分比环或配额仪表盘。</div>
+  </div>
+
+  <!-- Size ladder -->
+  <div class="card" data-od-id="size-ladder-card">
+    <div class="card-label">尺寸阶梯 · Size Ladder</div>
+    <div class="size-ladder">
+      <!-- 128px -->
+      <div class="size-item">
+        <div class="mark" style="width:128px;height:128px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 32 32" fill="none">
+            <defs>
+              <radialGradient id="g128" cx="0.35" cy="0.3" r="0.75">
+                <stop stop-color="#FFFFFF" stop-opacity="0.95"/>
+                <stop offset="0.55" stop-color="#C9DFF5" stop-opacity="0.55"/>
+                <stop offset="1" stop-color="#8FB4D8" stop-opacity="0.35"/>
+              </radialGradient>
+            </defs>
+            <ellipse cx="16" cy="25.2" rx="7.2" ry="1.8" fill="#6B8AAB" opacity="0.18"/>
+            <circle cx="16" cy="13.5" r="8.2" fill="#D7E6F5"/>
+            <circle cx="16" cy="13.5" r="8.2" fill="url(#g128)"/>
+            <circle cx="16" cy="13.5" r="8.2" stroke="#FFFFFF" stroke-opacity="0.85" stroke-width="1.1"/>
+            <ellipse cx="12.8" cy="10.4" rx="2.4" ry="1.5" fill="#FFFFFF" opacity="0.75" transform="rotate(-25 12.8 10.4)"/>
+            <circle cx="18.6" cy="15.2" r="0.9" fill="#10A37F" opacity="0.7"/>
+            <path d="M9.5 23.5 C12.2 25.4 19.8 25.4 22.5 23.5" stroke="#7A93AD" stroke-opacity="0.55" stroke-width="1.3" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+        <div class="dim">128</div>
+      </div>
+      <!-- 64px -->
+      <div class="size-item">
+        <div class="mark" style="width:64px;height:64px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 32 32" fill="none">
+            <defs>
+              <radialGradient id="g64" cx="0.35" cy="0.3" r="0.75">
+                <stop stop-color="#FFFFFF" stop-opacity="0.95"/>
+                <stop offset="0.55" stop-color="#C9DFF5" stop-opacity="0.55"/>
+                <stop offset="1" stop-color="#8FB4D8" stop-opacity="0.35"/>
+              </radialGradient>
+            </defs>
+            <ellipse cx="16" cy="25.2" rx="7.2" ry="1.8" fill="#6B8AAB" opacity="0.18"/>
+            <circle cx="16" cy="13.5" r="8.2" fill="#D7E6F5"/>
+            <circle cx="16" cy="13.5" r="8.2" fill="url(#g64)"/>
+            <circle cx="16" cy="13.5" r="8.2" stroke="#FFFFFF" stroke-opacity="0.85" stroke-width="1.1"/>
+            <ellipse cx="12.8" cy="10.4" rx="2.4" ry="1.5" fill="#FFFFFF" opacity="0.75" transform="rotate(-25 12.8 10.4)"/>
+            <circle cx="18.6" cy="15.2" r="0.9" fill="#10A37F" opacity="0.7"/>
+            <path d="M9.5 23.5 C12.2 25.4 19.8 25.4 22.5 23.5" stroke="#7A93AD" stroke-opacity="0.55" stroke-width="1.3" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+        <div class="dim">64</div>
+      </div>
+      <!-- 32px -->
+      <div class="size-item">
+        <div class="mark" style="width:32px;height:32px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <defs>
+              <radialGradient id="g32" cx="0.35" cy="0.3" r="0.75">
+                <stop stop-color="#FFFFFF" stop-opacity="0.95"/>
+                <stop offset="0.55" stop-color="#C9DFF5" stop-opacity="0.55"/>
+                <stop offset="1" stop-color="#8FB4D8" stop-opacity="0.35"/>
+              </radialGradient>
+            </defs>
+            <ellipse cx="16" cy="25.2" rx="7.2" ry="1.8" fill="#6B8AAB" opacity="0.18"/>
+            <circle cx="16" cy="13.5" r="8.2" fill="#D7E6F5"/>
+            <circle cx="16" cy="13.5" r="8.2" fill="url(#g32)"/>
+            <circle cx="16" cy="13.5" r="8.2" stroke="#FFFFFF" stroke-opacity="0.85" stroke-width="1.1"/>
+            <ellipse cx="12.8" cy="10.4" rx="2.4" ry="1.5" fill="#FFFFFF" opacity="0.75" transform="rotate(-25 12.8 10.4)"/>
+            <circle cx="18.6" cy="15.2" r="0.9" fill="#10A37F" opacity="0.7"/>
+            <path d="M9.5 23.5 C12.2 25.4 19.8 25.4 22.5 23.5" stroke="#7A93AD" stroke-opacity="0.55" stroke-width="1.3" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+        <div class="dim">32</div>
+      </div>
+      <!-- 18px -->
+      <div class="size-item">
+        <div class="mark" style="width:18px;height:18px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path fill="#1A2332" fill-rule="evenodd" d="
+              M9 2.15
+              a5.05 5.05 0 1 1 0 10.1
+              a5.05 5.05 0 1 1 0 -10.1
+              z
+              M6.9 4.55
+              a1.55 1.0 0 1 0 2.9 -0.95
+              a1.55 1.0 0 1 0 -2.9 0.95
+              z
+            "/>
+            <path d="M4.1 14.55 C6.6 16.15 11.4 16.15 13.9 14.55" stroke="#1A2332" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+            <ellipse cx="9" cy="15.55" rx="1.2" ry="0.55" fill="#1A2332"/>
+          </svg>
+        </div>
+        <div class="dim">18</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Logo mark variants -->
+<div class="full-card card" data-od-id="mark-variants-card">
+  <div class="card-label">标志变体 · Logo Mark Variants</div>
+  <div class="mark-variants">
+    <!-- Light bg -->
+    <div class="mark-variant">
+      <div class="swatch light">
+        <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 32 32" fill="none">
+          <defs>
+            <radialGradient id="gL" cx="0.35" cy="0.3" r="0.75">
+              <stop stop-color="#FFFFFF" stop-opacity="0.95"/>
+              <stop offset="0.55" stop-color="#C9DFF5" stop-opacity="0.55"/>
+              <stop offset="1" stop-color="#8FB4D8" stop-opacity="0.35"/>
+            </radialGradient>
+          </defs>
+          <ellipse cx="16" cy="25.2" rx="7.2" ry="1.8" fill="#6B8AAB" opacity="0.18"/>
+          <circle cx="16" cy="13.5" r="8.2" fill="#D7E6F5"/>
+          <circle cx="16" cy="13.5" r="8.2" fill="url(#gL)"/>
+          <circle cx="16" cy="13.5" r="8.2" stroke="#FFFFFF" stroke-opacity="0.85" stroke-width="1.1"/>
+          <ellipse cx="12.8" cy="10.4" rx="2.4" ry="1.5" fill="#FFFFFF" opacity="0.75" transform="rotate(-25 12.8 10.4)"/>
+          <circle cx="18.6" cy="15.2" r="0.9" fill="#10A37F" opacity="0.7"/>
+          <path d="M9.5 23.5 C12.2 25.4 19.8 25.4 22.5 23.5" stroke="#7A93AD" stroke-opacity="0.55" stroke-width="1.3" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+      <div class="label">浅底</div>
+    </div>
+    <!-- Dark bg -->
+    <div class="mark-variant">
+      <div class="swatch dark">
+        <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 32 32" fill="none">
+          <ellipse cx="16" cy="25.2" rx="7.2" ry="1.8" fill="#FFFFFF" opacity="0.18"/>
+          <circle cx="16" cy="13.5" r="8.2" fill="#FFFFFF" opacity="0.92"/>
+          <circle cx="16" cy="13.5" r="8.2" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="0.8"/>
+          <circle cx="16" cy="13.5" r="6.1" stroke="#FFFFFF" stroke-opacity="0.25" stroke-width="0.9" fill="none"/>
+          <ellipse cx="12.8" cy="10.4" rx="2.4" ry="1.5" fill="#FFFFFF" opacity="0.95" transform="rotate(-25 12.8 10.4)"/>
+          <circle cx="18.6" cy="15.2" r="0.9" fill="#10A37F" opacity="0.85"/>
+          <path d="M9.5 23.5 C12.2 25.4 19.8 25.4 22.5 23.5" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="1.3" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+      <div class="label">深底</div>
+    </div>
+    <!-- Glass bg -->
+    <div class="mark-variant">
+      <div class="swatch glass">
+        <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 32 32" fill="none">
+          <ellipse cx="16" cy="25.2" rx="7.2" ry="1.8" fill="#FFFFFF" opacity="0.18"/>
+          <circle cx="16" cy="13.5" r="8.2" fill="#FFFFFF" opacity="0.92"/>
+          <circle cx="16" cy="13.5" r="8.2" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="0.8"/>
+          <circle cx="16" cy="13.5" r="6.1" stroke="#FFFFFF" stroke-opacity="0.25" stroke-width="0.9" fill="none"/>
+          <ellipse cx="12.8" cy="10.4" rx="2.4" ry="1.5" fill="#FFFFFF" opacity="0.95" transform="rotate(-25 12.8 10.4)"/>
+          <circle cx="18.6" cy="15.2" r="0.9" fill="#10A37F" opacity="0.85"/>
+          <path d="M9.5 23.5 C12.2 25.4 19.8 25.4 22.5 23.5" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="1.3" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+      <div class="label">玻璃面</div>
+    </div>
+    <!-- Menu bar template -->
+    <div class="mark-variant">
+      <div class="swatch" style="background:#F0F4F8;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 18 18" fill="none">
+          <path fill="#1A2332" fill-rule="evenodd" d="
+            M9 2.15
+            a5.05 5.05 0 1 1 0 10.1
+            a5.05 5.05 0 1 1 0 -10.1
+            z
+            M6.9 4.55
+            a1.55 1.0 0 1 0 2.9 -0.95
+            a1.55 1.0 0 1 0 -2.9 0.95
+            z
+          "/>
+          <path d="M4.1 14.55 C6.6 16.15 11.4 16.15 13.9 14.55" stroke="#1A2332" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+          <ellipse cx="9" cy="15.55" rx="1.2" ry="0.55" fill="#1A2332"/>
+        </svg>
+      </div>
+      <div class="label">菜单栏模板</div>
+    </div>
+  </div>
+</div>
+
+<!-- v1 footnote -->
+<footer class="footnote-card" data-od-id="v1-footnote">
+  <div class="v1-ref">
+    <!-- Simplified v1 code-chip silhouette -->
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="6" y="9" width="20" height="14" rx="3" stroke="#FFFFFF" stroke-width="1.8" fill="none"/>
+      <path d="M12 13.5L9.5 16L12 18.5" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M20 13.5L22.5 16L20 18.5" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="16" cy="16" r="1.5" fill="#10A37F"/>
+    </svg>
+  </div>
+  <div class="footnote-body">
+    <div class="fn-title">vs Brand v1 · Code Chip</div>
+    <div class="fn-text">v1 以代码芯片为主读取，强调 agent-first 的技术身份。v2 转向 Float Glass — 产品名 Float 成为视觉隐喻的核心：浮空、轻盈、通透。Codex 仅作为球体内部的微小绿色火花存在，不再是主轮廓。</div>
+  </div>
+</footer>
+
+</body>
+</html>

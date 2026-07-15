@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 32 32" fill="none">
+  <!-- Ocean Mist mark -->
+  <defs>
+    <radialGradient id="orb" cx="0.35" cy="0.3" r="0.8">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="0.55" stop-color="#E6F2F4"/>
+      <stop offset="1" stop-color="#A9C8CF"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="16" cy="26.2" rx="7" ry="1.55" fill="#5F8A92" opacity="0.2"/>
+
+  <!-- Outer progress (outside orb) -->
+  <circle cx="16" cy="13" r="8.0" stroke="#173238" stroke-opacity="0.12" stroke-width="1.7" fill="none"/>
+  <path d="M16 5 A8 8 0 0 1 22.93 17"
+        stroke="#3D7A86" stroke-width="1.7" stroke-linecap="round" fill="none"/>
+
+  <!-- Orb inside -->
+  <circle cx="16" cy="13" r="6.15" fill="url(#orb)"/>
+  <circle cx="16" cy="13" r="6.15" stroke="#FFFFFF" stroke-width="1" stroke-opacity="0.85"/>
+
+  <!-- `>` -->
+  <path d="M13.5 10.2 L18.2 13 L13.5 15.8"
+        stroke="#173238" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <ellipse cx="13.4" cy="10.6" rx="1.5" ry="0.9" fill="#FFFFFF" opacity="0.22" transform="rotate(-28 13.4 10.6)"/>
+  <path d="M9.2 23.9 C12 25.6 20 25.6 22.8 23.9" stroke="#5F8A92" stroke-opacity="0.55" stroke-width="1.2" stroke-linecap="round"/>
+</svg>

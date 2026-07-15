@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Codex Float — Brand v2.1</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
+      color: #111827;
+      background: linear-gradient(160deg, #e9eef5, #ddd6cb 55%, #cfd8c8);
+      min-height: 100vh;
+      padding: 40px 48px 80px;
+    }
+    h1 { font-size: 24px; font-weight: 650; letter-spacing: -0.03em; margin: 0 0 8px; }
+    .sub { color: #5b6570; max-width: 760px; line-height: 1.55; margin-bottom: 24px; font-size: 14px; }
+    .grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 22px; }
+    @media (max-width: 960px) { .grid { grid-template-columns: 1fr; } }
+    .panel {
+      background: rgba(255,255,255,0.45);
+      border: 1px solid rgba(255,255,255,0.7);
+      border-radius: 22px;
+      padding: 22px;
+      backdrop-filter: blur(22px) saturate(1.3);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.08);
+    }
+    h2 { margin: 0 0 6px; font-size: 18px; letter-spacing: -0.02em; }
+    .tag {
+      display: inline-block; font-size: 11px; font-weight: 600; color: #5b6570;
+      background: rgba(0,0,0,0.05); border-radius: 999px; padding: 3px 9px; margin-bottom: 12px;
+    }
+    .blurb { font-size: 13px; color: #5b6570; line-height: 1.5; margin: 0 0 16px; }
+    .row { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-end; }
+    .cell { text-align: center; }
+    .cell span { display: block; margin-top: 8px; font-size: 11px; color: #5b6570; font-weight: 500; }
+    .icon { width: 128px; height: 128px; display: block; }
+    .mark { width: 72px; height: 72px; display: block; }
+    .dark {
+      background: #15171c; border-radius: 14px; padding: 12px 14px;
+      display: inline-flex; align-items: center; gap: 10px; color: #fff;
+    }
+    /* Use dedicated white glyph on dark — do not CSS-invert semi-transparent strokes. */
+    .mb { width: 18px; height: 18px; display: block; image-rendering: auto; }
+    .mb-zoom {
+      width: 54px; height: 54px; display: block;
+      /* 3× zoom of the true 18pt glyph for inspection */
+    }
+    .menubar-strip {
+      margin-top: 16px; height: 32px; border-radius: 10px;
+      background: linear-gradient(180deg, #3a3a3c, #1c1c1e);
+      display: flex; align-items: center; justify-content: flex-end;
+      padding: 0 14px; gap: 12px; color: rgba(255,255,255,0.75); font-size: 11px;
+    }
+    .legal {
+      margin-top: 18px; padding: 12px 14px; border-radius: 14px;
+      background: rgba(255,255,255,0.4); border: 1px dashed rgba(0,0,0,0.1);
+      font-size: 12px; color: #5b6570; line-height: 1.5;
+    }
+    .parts { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+    .part {
+      flex: 1; min-width: 120px; border-radius: 12px; padding: 10px 12px;
+      background: rgba(255,255,255,0.4); font-size: 12px; color: #374151; line-height: 1.4;
+    }
+    .part b { display: block; margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Codex Float — Brand · Ocean Mist</h1>
+  <p class="sub">
+    结构：外侧进度环（约 1/3）+ 玻璃球 + 中心 <b>&gt;</b>。
+    配色已冻结为 <b>Ocean Mist</b>（青灰单色系：环 <code>#3D7A86</code> / 墨 <code>#173238</code>）。
+  </p>
+
+  <div class="grid">
+    <section class="panel">
+      <div class="tag">Ocean Mist · 已选定</div>
+      <h2>Float Glass + outer ring + &gt;</h2>
+      <p class="blurb">App 图标：外侧进度 + 玻璃球 + &gt;。菜单栏 18pt：外侧进度 + <b>实心圆</b> + &gt; 挖空 + 底弧。色板见 color-palettes.html。</p>
+      <div class="row">
+        <div class="cell">
+          <img class="icon" src="../Assets/Brand/v2/app-icon.svg?v=ocean" alt="app icon" />
+          <span>App Icon</span>
+        </div>
+        <div class="cell">
+          <img class="mark" src="../Assets/Brand/v2/logo-mark.svg?v=ocean" alt="mark" />
+          <span>Mark</span>
+        </div>
+        <div class="cell">
+          <div class="dark">
+            <img class="mb" src="../Assets/Brand/v2/menubar-white.svg?v=25" alt="menu bar 18pt" />
+            <span style="margin:0;color:rgba(255,255,255,.7);font-size:11px">18pt 实尺寸</span>
+          </div>
+          <span>Menu 18pt · 实心圆</span>
+        </div>
+        <div class="cell">
+          <div class="dark">
+            <img class="mb-zoom" src="../Assets/Brand/v2/menubar-white.svg?v=25" alt="menu bar zoomed" />
+          </div>
+          <span>18pt ×3 放大</span>
+        </div>
+      </div>
+      <div class="menubar-strip">
+        <img class="mb" src="../Assets/Brand/v2/menubar-white.svg?v=25" alt="" />
+        <span>9:41</span>
+      </div>
+      <div class="parts">
+        <div class="part"><b>外环</b>进度 ≈ 1/3</div>
+        <div class="part"><b>中球</b>悬浮玻璃</div>
+        <div class="part"><b>中心</b>&gt;</div>
+      </div>
+      <div class="legal">
+        <b>关于官方 logo：</b>把 OpenAI / Codex 官方标识直接当自家 App 图标或菜单栏图标，存在商标风险（容易被当成官方产品或授权附属）。
+        个人自用灰色地带也大；若以后分发/上架更不安全。推荐用原创的代码符号（如 &gt;_）表达「Codex 意向」。
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="tag">v1 · 保留对照</div>
+      <h2>Code Chip</h2>
+      <p class="blurb">编码身份更强，但悬浮感弱；作为备选保留。</p>
+      <div class="row">
+        <div class="cell">
+          <img class="icon" src="../Assets/Brand/v1/app-icon.svg" alt="v1 app icon" />
+          <span>App Icon</span>
+        </div>
+        <div class="cell">
+          <div class="dark">
+            <img class="mb" src="../Assets/Brand/v1/menubar-template.svg" alt="v1 menu" />
+          </div>
+          <span>Menu</span>
+        </div>
+      </div>
+      <div class="legal" style="margin-top:24px">
+        若你更想要「纯 &gt;」或「纯进度环」而不是两者叠在一起，也可以再收敛一版——18pt 菜单栏越简单越稳。
+      </div>
+    </section>
+  </div>
+</body>
+</html>

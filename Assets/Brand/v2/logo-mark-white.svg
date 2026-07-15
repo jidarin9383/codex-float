@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 32 32" fill="none">
+  <!-- Ocean Mist mark on dark / glass (white body, teal progress) -->
+  <ellipse cx="16" cy="26.2" rx="7" ry="1.55" fill="#FFFFFF" opacity="0.18"/>
+  <circle cx="16" cy="13" r="8.0" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="1.7" fill="none"/>
+  <path d="M16 5 A8 8 0 0 1 22.93 17"
+        stroke="#7EB8C2" stroke-width="1.7" stroke-linecap="round" fill="none"/>
+  <circle cx="16" cy="13" r="6.15" fill="#FFFFFF" opacity="0.95"/>
+  <circle cx="16" cy="13" r="6.15" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="0.85"/>
+  <path d="M13.5 10.2 L18.2 13 L13.5 15.8"
+        stroke="#173238" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M9.2 23.9 C12 25.6 20 25.6 22.8 23.9" stroke="#FFFFFF" stroke-opacity="0.75" stroke-width="1.2" stroke-linecap="round"/>
+</svg>

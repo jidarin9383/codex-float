@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Codex Float — Tahoe Glass UI Mock</title>
+  <style>
+    :root {
+      --label: rgba(0,0,0,0.88);
+      --secondary: rgba(0,0,0,0.48);
+      --green: #34c759;
+      --orange: #ff9f0a;
+      --red: #ff3b30;
+      --gray: rgba(60,60,67,0.4);
+      --shadow: 0 14px 40px rgba(0,0,0,0.14), 0 2px 6px rgba(0,0,0,0.05);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
+      color: var(--label);
+      min-height: 100vh;
+      padding: 40px 48px 80px;
+      background:
+        radial-gradient(900px 500px at 85% 15%, rgba(255,255,255,0.55), transparent 55%),
+        radial-gradient(700px 400px at 15% 80%, rgba(120,180,255,0.18), transparent 50%),
+        linear-gradient(155deg, #cfd8e6 0%, #d9d0c4 42%, #b9c4b0 100%);
+    }
+    h1 { font-size: 22px; font-weight: 650; letter-spacing: -0.02em; margin: 0 0 6px; }
+    .sub { color: var(--secondary); font-size: 13px; margin-bottom: 28px; max-width: 760px; line-height: 1.5; }
+    .tag {
+      display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px;
+      background: rgba(255,255,255,0.45); color: var(--secondary); margin-left: 8px; vertical-align: middle;
+      border: 1px solid rgba(255,255,255,0.5);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 28px;
+    }
+    .card {
+      background: rgba(255,255,255,0.22);
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 20px;
+      padding: 18px 18px 22px;
+      backdrop-filter: blur(24px) saturate(1.35);
+    }
+    .card h2 {
+      margin: 0 0 14px; font-size: 12px; font-weight: 600; color: var(--secondary);
+    }
+    .desk {
+      position: relative;
+      height: 420px;
+      border-radius: 16px;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.18), transparent 35%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"),
+        linear-gradient(145deg, #8fa8c4, #c4b7a2 48%, #9bb08c);
+      border: 1px solid rgba(255,255,255,0.25);
+    }
+    .menubar {
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 14px;
+      gap: 12px;
+      background: rgba(245,248,252,0.42);
+      border-bottom: 1px solid rgba(255,255,255,0.28);
+      backdrop-filter: blur(30px) saturate(1.6);
+    }
+    .mb-icon {
+      width: 16px; height: 16px; position: relative;
+    }
+    .mb-icon .ring {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid color-mix(in srgb, var(--accent) 25%, transparent);
+      box-sizing: border-box;
+      position: absolute; inset: 1px;
+      background:
+        conic-gradient(var(--accent) calc(var(--p) * 1%), transparent 0)
+        border-box;
+      -webkit-mask:
+        radial-gradient(farthest-side, transparent calc(100% - 2.2px), #000 calc(100% - 2px));
+              mask:
+        radial-gradient(farthest-side, transparent calc(100% - 2.2px), #000 calc(100% - 2px));
+    }
+    .mb-icon .core {
+      position: absolute; left: 50%; top: 50%;
+      width: 3.5px; height: 3.5px; border-radius: 50%;
+      background: var(--accent);
+      transform: translate(-50%, -50%);
+    }
+    .mb-menu {
+      position: absolute; top: 36px; right: 12px; width: 190px;
+      padding: 6px 0; font-size: 13px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(255,255,255,0.65);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(28px) saturate(1.5);
+    }
+    .mb-menu .row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 7px 12px;
+    }
+    .mb-menu .row:hover { background: rgba(255,255,255,0.35); }
+    .mb-menu .sep { height: 1px; background: rgba(0,0,0,0.08); margin: 4px 0; }
+    .check {
+      width: 12px; height: 12px; border-radius: 3px;
+      background: #0a84ff;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35);
+    }
+
+    .glass {
+      background: linear-gradient(155deg, rgba(255,255,255,0.52), rgba(255,255,255,0.18) 45%, rgba(255,255,255,0.12));
+      border: 1px solid rgba(0,0,0,0.12);
+      box-shadow:
+        inset 0 0 0 0.6px rgba(255,255,255,0.55),
+        0 1px 2px rgba(0,0,0,0.045),
+        0 8px 16px rgba(0,0,0,0.09),
+        0 18px 36px rgba(0,0,0,0.07);
+      backdrop-filter: blur(28px) saturate(1.55);
+    }
+
+    .widget {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      width: 138px; height: 40px; border-radius: 999px;
+      display: flex; align-items: center; gap: 8px; padding: 0 14px;
+      overflow: hidden;
+      /* One capsule only — capacity flush to edge, no inset frame gap */
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.38), rgba(255,255,255,0.08) 50%, transparent),
+        rgba(255,255,255,0.28);
+      /* Dual-tone edge + soft Liquid Glass elevation (not a hard plate) */
+      border: 1px solid rgba(0,0,0,0.12);
+      box-shadow:
+        inset 0 0 0 0.6px rgba(255,255,255,0.55),
+        0 1px 2px rgba(0,0,0,0.04),
+        0 4px 10px rgba(0,0,0,0.08),
+        0 10px 22px rgba(0,0,0,0.06);
+      backdrop-filter: blur(28px) saturate(1.55);
+    }
+    .widget::before {
+      content: "";
+      position: absolute; top: 0; bottom: 0; left: 0;
+      width: calc(var(--p, 18) * 1%);
+      /* Full height flush — no top/bottom inset */
+      background: linear-gradient(90deg,
+        color-mix(in srgb, var(--accent) 92%, white),
+        color-mix(in srgb, var(--accent) 75%, transparent));
+      opacity: 0.92;
+      pointer-events: none;
+    }
+    .widget > * { position: relative; z-index: 1; }
+    .logo-mark {
+      width: 18px; height: 18px; flex: 0 0 auto; display: block;
+      filter: var(--logo-filter, none);
+    }
+    .pct {
+      font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+      color: var(--on-fill, inherit);
+    }
+    .left-label { font-size: 11px; font-weight: 500; color: var(--on-fill-muted, var(--secondary)); }
+
+    .detail {
+      position: absolute; right: 14px; top: 46px;
+      width: 320px; height: 372px; border-radius: 22px;
+      padding: 16px; display: flex; flex-direction: column; gap: 16px;
+    }
+    .detail-head { display: flex; justify-content: space-between; align-items: flex-start; }
+    .eyebrow { font-size: 12px; font-weight: 500; color: var(--secondary); margin-bottom: 4px; }
+    .hero { font-size: 44px; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1; }
+    .collapse {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: grid; place-items: center;
+      color: var(--secondary); font-size: 12px; font-weight: 700;
+      background: rgba(255,255,255,0.35);
+      border: 1px solid rgba(255,255,255,0.45);
+      backdrop-filter: blur(12px);
+    }
+    .track {
+      height: 9px; border-radius: 999px;
+      background: rgba(0,0,0,0.07);
+      border: 0.5px solid rgba(255,255,255,0.2);
+      overflow: hidden;
+    }
+    .fill {
+      height: 100%; width: 18%; border-radius: inherit;
+      background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 95%, white), color-mix(in srgb, var(--accent) 75%, black));
+      box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 40%, transparent);
+    }
+    .facts {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.28);
+      border-radius: 14px;
+      padding: 4px 12px;
+    }
+    .fact {
+      display: flex; justify-content: space-between; align-items: center;
+      min-height: 36px; font-size: 13px; gap: 12px;
+    }
+    .fact.reset { min-height: 48px; }
+    .fact .k { color: var(--secondary); }
+    .fact .v { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+    .fact .v small {
+      display: block; font-weight: 500; font-size: 11px; color: var(--secondary); margin-top: 2px;
+    }
+    .fact + .fact { border-top: 1px solid rgba(0,0,0,0.07); }
+    .reset-row {
+      margin-top: auto; display: flex; align-items: center; justify-content: space-between;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.28);
+      border-radius: 14px; padding: 10px 12px; font-size: 13px; font-weight: 500;
+    }
+    .btn {
+      font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 999px;
+      background: rgba(255,255,255,0.35);
+      border: 1px solid rgba(255,255,255,0.4);
+      display: inline-flex; gap: 4px; align-items: center;
+    }
+    .note { margin-top: 12px; font-size: 12px; color: var(--secondary); line-height: 1.45; }
+    .swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+    .swatch {
+      width: 138px; height: 40px; border-radius: 999px;
+      display: flex; align-items: center; gap: 8px; padding: 0 14px;
+      overflow: hidden; position: relative;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.38), rgba(255,255,255,0.08) 50%, transparent),
+        rgba(255,255,255,0.28);
+      border: 1px solid rgba(0,0,0,0.14);
+      box-shadow: inset 0 0 0 0.6px rgba(255,255,255,0.55);
+      backdrop-filter: blur(28px) saturate(1.55);
+    }
+    .swatch::before {
+      content: "";
+      position: absolute; top: 0; bottom: 0; left: 0;
+      width: calc(var(--p, 50) * 1%);
+      background: linear-gradient(90deg,
+        color-mix(in srgb, var(--accent) 92%, white),
+        color-mix(in srgb, var(--accent) 75%, transparent));
+      opacity: 0.92;
+      pointer-events: none;
+    }
+    .swatch > * { position: relative; z-index: 1; }
+  </style>
+</head>
+<body>
+  <h1>Codex Float <span class="tag">macOS Tahoe · Liquid Glass</span></h1>
+  <p class="sub">
+    菜单栏仅显示额度环图标（无百分比数字）；悬浮窗使用 ultra-thin 玻璃 + 高光描边。
+    重置行展示绝对日期时间 + 相对倒计时。18% fixture 为系统橙。
+  </p>
+
+  <div class="grid">
+    <section class="card">
+      <h2>菜单栏图标 · 无数字</h2>
+      <div class="desk" style="height: 240px">
+        <div class="menubar">
+          <div class="mb-icon" style="--accent: var(--orange); --p: 18" title="Codex Float">
+            <div class="ring"></div>
+            <div class="core"></div>
+          </div>
+        </div>
+        <div class="mb-menu">
+          <div class="row"><span>悬浮窗</span><span class="check"></span></div>
+          <div class="row"><span>开机自启</span><span></span></div>
+          <div class="row"><span>检查更新</span><span></span></div>
+          <div class="sep"></div>
+          <div class="row"><span>退出 Codex Float</span><span>⌘Q</span></div>
+        </div>
+      </div>
+      <p class="note">菜单栏 = 图标 + 操作菜单；百分比只出现在悬浮窗。</p>
+    </section>
+
+    <section class="card">
+      <h2>折叠悬浮窗 · Tahoe 玻璃</h2>
+      <div class="desk">
+        <div class="menubar">
+          <div class="mb-icon" style="--accent: var(--orange); --p: 18">
+            <div class="ring"></div><div class="core"></div>
+          </div>
+        </div>
+        <div class="widget" style="--accent: var(--orange); --p: 18">
+          <img class="logo-mark" src="../Assets/Brand/v2/logo-mark.svg" alt="" />
+          <span class="pct">18%</span>
+          <span class="left-label">剩余</span>
+        </div>
+      </div>
+      <p class="note">单层 liquid glass 胶囊；容量色从左铺满剩余比例，未填充区保持透明玻璃，无灰底、无内嵌胶囊。</p>
+    </section>
+
+    <section class="card">
+      <h2>展开详情 · 重置含日期</h2>
+      <div class="desk">
+        <div class="menubar">
+          <div class="mb-icon" style="--accent: var(--orange); --p: 18">
+            <div class="ring"></div><div class="core"></div>
+          </div>
+        </div>
+        <div class="detail glass" style="--accent: var(--orange)">
+          <div class="detail-head" style="flex-direction: column; align-items: stretch; gap: 12px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <img src="../Assets/Brand/v2/logo-mark.svg" width="20" height="20" alt="" />
+              <span style="font-size:13px; font-weight:600;">Codex Float</span>
+              <span style="flex:1"></span>
+              <div class="collapse">›</div>
+            </div>
+            <div>
+              <div class="eyebrow">本周剩余</div>
+              <div class="hero">18%</div>
+            </div>
+          </div>
+          <div class="track"><div class="fill"></div></div>
+          <div class="facts">
+            <div class="fact reset">
+              <span class="k">下次重置</span>
+              <span class="v">7 月 20 日 14:30<small>6 天 18 小时后重置</small></span>
+            </div>
+            <div class="fact"><span class="k">当前套餐</span><span class="v">Plus</span></div>
+          </div>
+          <div class="reset-row">
+            <span>2 次重置机会</span>
+            <span class="btn">查看 ↗</span>
+          </div>
+        </div>
+      </div>
+      <p class="note">主行：绝对日期 + 时间；副行：相对倒计时。</p>
+    </section>
+
+    <section class="card">
+      <h2>状态色带</h2>
+      <div class="swatches">
+        <div class="swatch" style="--accent: #3D7A86; --p: 64; --on-fill: #fff; --on-fill-muted: rgba(255,255,255,0.85); --logo-filter: brightness(0) invert(1)">
+          <img class="logo-mark" src="../Assets/Brand/v2/logo-mark.svg" alt="" />
+          <span class="pct">64%</span><span class="left-label">剩余</span>
+        </div>
+        <div class="swatch" style="--accent: var(--orange); --p: 18">
+          <img class="logo-mark" src="../Assets/Brand/v2/logo-mark.svg" alt="" />
+          <span class="pct">18%</span><span class="left-label">剩余</span>
+        </div>
+        <div class="swatch" style="--accent: var(--red); --p: 8">
+          <img class="logo-mark" src="../Assets/Brand/v2/logo-mark.svg" alt="" />
+          <span class="pct">8%</span><span class="left-label">剩余</span>
+        </div>
+        <div class="swatch" style="--accent: var(--gray); --p: 0">
+          <img class="logo-mark" src="../Assets/Brand/v2/logo-mark.svg" alt="" />
+          <span class="pct">—</span>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

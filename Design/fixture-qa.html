@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Codex Float — Fixture QA · Ocean Mist v2</title>
+  <style>
+    :root {
+      --ink: #173238;
+      --ring: #3D7A86;
+      --mist: #E6F2F4;
+      --glass: #A9C8CF;
+      --orange: #ff9f0a;
+      --red: #ff3b30;
+      --yellow: #ffd60a;
+      --gray: rgba(60,60,67,0.45);
+      --label: rgba(0,0,0,0.88);
+      --secondary: rgba(0,0,0,0.48);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
+      color: var(--label);
+      min-height: 100vh;
+      padding: 36px 44px 72px;
+      background:
+        radial-gradient(900px 500px at 85% 12%, rgba(230,242,244,0.75), transparent 55%),
+        linear-gradient(155deg, #cfd8e6 0%, #d5e0e3 45%, #b9c8c4 100%);
+    }
+    h1 { font-size: 22px; font-weight: 650; letter-spacing: -0.02em; margin: 0 0 6px; }
+    .sub { color: var(--secondary); font-size: 13px; line-height: 1.55; max-width: 820px; margin-bottom: 22px; }
+    .tag {
+      display: inline-block; font-size: 11px; font-weight: 600; color: var(--ring);
+      background: rgba(61,122,134,0.12); border-radius: 999px; padding: 3px 10px; margin-bottom: 10px;
+    }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+    .panel {
+      background: rgba(255,255,255,0.38);
+      border: 1px solid rgba(255,255,255,0.65);
+      border-radius: 20px;
+      padding: 16px 16px 18px;
+      backdrop-filter: blur(22px) saturate(1.3);
+      box-shadow: 0 14px 36px rgba(0,0,0,0.07);
+    }
+    .panel h2 {
+      margin: 0 0 12px; font-size: 12px; font-weight: 600; color: var(--secondary);
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    }
+    .badge {
+      font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 999px;
+      background: rgba(0,0,0,0.05); color: var(--secondary);
+    }
+    .badge.ok { background: rgba(61,122,134,0.14); color: var(--ring); }
+    .desk {
+      border-radius: 14px; overflow: hidden;
+      background: linear-gradient(145deg, #8fa8c4, #c4b7a2 48%, #9bb08c);
+      border: 1px solid rgba(255,255,255,0.28);
+      min-height: 120px; position: relative;
+    }
+    .menubar {
+      height: 30px; display: flex; align-items: center; justify-content: flex-end;
+      padding: 0 12px; gap: 10px;
+      background: rgba(28,28,30,0.72); color: rgba(255,255,255,0.72); font-size: 11px;
+    }
+    .menubar.light {
+      background: rgba(245,248,252,0.55); color: rgba(0,0,0,0.55);
+      border-bottom: 1px solid rgba(255,255,255,0.3);
+    }
+    .mb {
+      width: 18px; height: 18px; display: block;
+    }
+    .mb-wrap { position: relative; width: 18px; height: 18px; }
+    .pip {
+      position: absolute; right: -1px; bottom: -1px;
+      width: 5px; height: 5px; border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.15);
+    }
+    .pip.err { background: #ff9f0a; }
+    .pip.load { background: rgba(255,255,255,0.55); width: 4px; height: 4px; }
+    .stage {
+      padding: 28px 18px 22px; display: flex; justify-content: flex-end; align-items: flex-start;
+    }
+    .widget {
+      width: 138px; height: 40px; border-radius: 999px;
+      display: flex; align-items: center; gap: 8px; padding: 0 14px;
+      overflow: hidden; position: relative;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.38), rgba(255,255,255,0.08) 50%, transparent),
+        rgba(255,255,255,0.28);
+      border: 1px solid rgba(0,0,0,0.14);
+      box-shadow: inset 0 0 0 0.6px rgba(255,255,255,0.55);
+      backdrop-filter: blur(18px) saturate(1.4);
+    }
+    .widget::before {
+      content: "";
+      position: absolute; top: 0; bottom: 0; left: 0;
+      width: calc(var(--p, 18) * 1%);
+      background: linear-gradient(90deg,
+        color-mix(in srgb, var(--accent) 92%, white),
+        color-mix(in srgb, var(--accent) 75%, transparent));
+      opacity: 0.92;
+      pointer-events: none;
+    }
+    .widget > * { position: relative; z-index: 1; }
+    .logo-mark { width: 18px; height: 18px; display: block; flex: 0 0 auto; filter: var(--logo-filter, none); }
+    .pct {
+      font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em; color: var(--on-fill, inherit);
+    }
+    .rem { font-size: 11px; font-weight: 500; color: var(--on-fill-muted, var(--secondary)); }
+    .detail {
+      width: 320px; min-height: 300px; border-radius: 22px; padding: 16px;
+      background: rgba(255,255,255,0.48);
+      border: 1px solid rgba(255,255,255,0.75);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.8);
+      backdrop-filter: blur(22px) saturate(1.4);
+    }
+    .brand-row {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 600; color: var(--secondary); margin-bottom: 4px;
+    }
+    .brand-row img { width: 14px; height: 14px; }
+    .hero {
+      font-size: 44px; font-weight: 650; letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums; line-height: 1;
+      margin: 4px 0 14px;
+    }
+    .track {
+      height: 8px; border-radius: 999px; background: rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 14px;
+    }
+    .fill { height: 100%; border-radius: inherit; }
+    .row {
+      display: flex; justify-content: space-between; gap: 12px;
+      font-size: 13px; padding: 8px 0; border-top: 1px solid rgba(0,0,0,0.06);
+    }
+    .row span:first-child { color: var(--secondary); }
+    .banner {
+      margin-top: 12px; padding: 8px 10px; border-radius: 10px;
+      background: rgba(255,214,10,0.22); color: #6b5a00; font-size: 12px;
+    }
+    .banner.err { background: rgba(255,149,0,0.18); color: #7a4300; }
+    .checklist {
+      margin-top: 22px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px;
+    }
+    .check {
+      font-size: 12px; line-height: 1.45; color: #374151;
+      background: rgba(255,255,255,0.4); border-radius: 12px; padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,0.55);
+    }
+    .check b { display: block; margin-bottom: 3px; color: var(--ink); }
+    .zoom-row { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; margin-top: 8px; }
+    .zoom-cell { text-align: center; }
+    .zoom-cell span { display: block; margin-top: 6px; font-size: 11px; color: var(--secondary); }
+    .dark-tile {
+      background: #15171c; border-radius: 12px; padding: 12px;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="tag">Step 2 · Fixture visual QA</div>
+  <h1>Ocean Mist v2 菜单栏 + 静态 fixtures</h1>
+  <p class="sub">
+    菜单栏默认已切到 <b>Ocean Mist v2</b>（外侧进度 + 实心圆 + <code>&gt;</code> 挖空 + 底弧）。
+    本页用真实 brand 资产核对 18% / loading / stale / 0% / 登录失败 / 缺 codex。
+    菜单栏仍为 logo-only；额度数字只出现在悬浮窗。
+  </p>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>Menu bar glyph <span class="badge ok">v2 default</span></h2>
+      <div class="desk">
+        <div class="menubar">
+          <span>Wed 15:10</span>
+          <div class="mb-wrap" title="正常 · 无 pip">
+            <img class="mb" src="../Assets/Brand/v2/menubar-white.svg" alt="menu bar logo v2" />
+          </div>
+        </div>
+        <div class="stage" style="padding-top: 18px;">
+          <div class="zoom-row" style="width:100%; justify-content: space-between;">
+            <div class="zoom-cell">
+              <div class="dark-tile"><img src="../Assets/Brand/v2/menubar-white.svg" width="18" height="18" alt="18pt" /></div>
+              <span>18pt template</span>
+            </div>
+            <div class="zoom-cell">
+              <div class="dark-tile"><img src="../Assets/Brand/v2/menubar-white.svg" width="54" height="54" alt="3x" /></div>
+              <span>3× 检视</span>
+            </div>
+            <div class="zoom-cell">
+              <div class="dark-tile" style="position:relative; width:54px; height:54px;">
+                <img src="../Assets/Brand/v2/menubar-white.svg" width="54" height="54" alt="error pip" />
+                <span class="pip err" style="width:12px;height:12px;right:2px;bottom:2px;"></span>
+              </div>
+              <span>error pip</span>
+            </div>
+            <div class="zoom-cell">
+              <div class="dark-tile" style="position:relative; width:54px; height:54px;">
+                <img src="../Assets/Brand/v2/menubar-white.svg" width="54" height="54" alt="loading pip" />
+                <span class="pip load" style="width:10px;height:10px;right:3px;bottom:3px;background:rgba(255,255,255,0.55);"></span>
+              </div>
+              <span>loading pip</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Light menu bar strip <span class="badge">system template</span></h2>
+      <div class="desk">
+        <div class="menubar light">
+          <span>控制中心</span>
+          <img class="mb" src="../Assets/Brand/v2/menubar-template.svg" alt="template black" style="opacity:0.88;" />
+        </div>
+        <div class="stage">
+          <div class="widget" style="--accent: var(--orange); --p: 18" title="default fixture 18%">
+            <img class="logo-mark" src="../Assets/Brand/v2/logo-mark.svg" alt="" />
+            <div class="pct">18%</div>
+            <div class="rem">剩余</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Fixtures -->
+    <section class="panel">
+      <h2>Fixture · 18% current <span class="badge">attention orange</span></h2>
+      <div class="desk"><div class="stage">
+        <div class="widget" style="--accent: var(--orange); --p: 18">
+          <img class="logo-mark" src="../Assets/Brand/v2/logo-mark.svg" alt="" />
+          <div class="pct">18%</div><div class="rem">剩余</div>
+        </div>
+      </div></div>
+    </section>
+
+    <section class="panel">
+      <h2>Fixture · loading <span class="badge">gray</span></h2>
+      <div class="desk"><div class="stage">
+        <div class="widget" style="--accent: var(--gray); --p: 0">
+          <img class="logo-mark" src="../Assets/Brand/v2/logo-mark.svg" alt="" />
+          <div class="pct" style="color:var(--secondary);">—</div>
+        </div>
+      </div></div>
+    </section>
+
+    <section class="panel">
+      <h2>Fixture · stale 18% <span class="badge">yellow</span></h2>
+      <div class="desk"><div class="stage">
+        <div class="widget" style="--accent: var(--yellow); --p: 18">
+          <img class="logo-mark" src="../Assets/Brand/v2/logo-mark.svg" alt="" />
+          <div class="pct">18%</div><div class="rem">剩余</div>
+        </div>
+      </div></div>
+    </section>
+
+    <section class="panel">
+      <h2>Fixture · 0% limit <span class="badge">critical red</span></h2>
+      <div class="desk"><div class="stage">
+        <div class="widget" style="--accent: var(--red); --p: 0">
+          <img class="logo-mark" src="../Assets/Brand/v2/logo-mark.svg" alt="" />
+          <div class="pct">0%</div><div class="rem">剩余</div>
+        </div>
+      </div></div>
+    </section>
+
+    <section class="panel">
+      <h2>Fixture · logged out <span class="badge">error</span></h2>
+      <div class="desk"><div class="stage">
+        <div class="widget" style="--accent: var(--gray); --p: 0">
+          <img class="logo-mark" src="../Assets/Brand/v2/logo-mark.svg" alt="" />
+          <div class="pct" style="color:var(--secondary);">—</div>
+        </div>
+      </div></div>
+      <p style="margin:10px 0 0;font-size:12px;color:var(--secondary);">状态文案：需要先登录 Codex CLI</p>
+    </section>
+
+    <section class="panel">
+      <h2>Fixture · missing codex <span class="badge">error</span></h2>
+      <div class="desk"><div class="stage">
+        <div class="widget" style="--accent: var(--gray); --p: 0">
+          <img class="logo-mark" src="../Assets/Brand/v2/logo-mark.svg" alt="" />
+          <div class="pct" style="color:var(--secondary);">—</div>
+        </div>
+      </div></div>
+      <p style="margin:10px 0 0;font-size:12px;color:var(--secondary);">状态文案：未找到 codex 可执行文件</p>
+    </section>
+
+    <section class="panel" style="grid-column: 1 / -1;">
+      <h2>Detail · 18% expanded <span class="badge ok">Ocean Mist mark</span></h2>
+      <div class="desk" style="min-height: auto; padding: 24px; display:flex; justify-content:center;">
+        <div class="detail">
+          <div class="brand-row" style="font-size:13px;font-weight:600;color:var(--label);margin-bottom:12px;">
+            <img src="../Assets/Brand/v2/logo-mark.svg" width="20" height="20" alt="" />
+            Codex Float
+          </div>
+          <div style="font-size:12px;font-weight:500;color:var(--secondary);">本周剩余</div>
+          <div class="hero">18%</div>
+          <div class="track"><div class="fill" style="width:18%; background: var(--orange);"></div></div>
+          <div class="row"><span>下次重置</span><span>7 月 20 日 14:30</span></div>
+          <div class="row"><span>倒计时</span><span>6 天 18 小时后重置</span></div>
+          <div class="row"><span>当前套餐</span><span>Plus</span></div>
+          <div class="row"><span>重置机会</span><span>2 次 · 查看</span></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="checklist">
+    <div class="check"><b>菜单栏</b>默认 v2 实心圆 + &gt;，无百分比数字；仅 loading/error 显示小 pip。</div>
+    <div class="check"><b>悬浮窗</b>单层 liquid glass 胶囊；容量色铺满高度从左填剩余%；未填区透明玻璃，无灰底、无内嵌胶囊。</div>
+    <div class="check"><b>健康色</b>填充 healthy 走 brand ring <code>#3D7A86</code>，不使用系统绿。</div>
+    <div class="check"><b>诚实状态</b>loading/stale/error 有灰色或黄/橙信号 + 文案，不伪装为最新额度。</div>
+    <div class="check"><b>运行时切换</b>菜单「切换示例数据」可循环全部 fixtures（静态模式）。</div>
+    <div class="check"><b>下一步</b>Step 3 协议层：app-server JSONL client + repository。</div>
+  </div>
+</body>
+</html>
