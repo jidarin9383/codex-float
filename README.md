@@ -24,6 +24,8 @@ Codex Float 是一款原生 macOS 小工具。它把 Codex 本周剩余额度放
 2. 解压后，将 **Codex Float.app** 拖入「应用程序」文件夹。
 3. 打开 Codex Float。应用会自动读取当前 Mac 上的 Codex 额度。
 
+`macos-universal.zip` 是同时支持 Apple Silicon 和 Intel Mac 的统一安装包，无需区分处理器架构。
+
 ### 如果 macOS 提示无法打开
 
 当前下载版本尚未经过 Apple 公证。请确认安装包来自本仓库的 [Releases](https://github.com/jidarin9383/codex-float/releases/latest)，然后：
