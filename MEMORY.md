@@ -121,3 +121,10 @@
 - Release: `.github/workflows/release.yml` on `v*` tags → upload zip.
 - LICENSE: MIT. Bundle id frozen `app.codexfloat.mac`. First marketing version `0.1.0`.
 - Developer ID + notarization + Homebrew deferred.
+
+## 2026-07-15 — GitHub README audience and onboarding
+
+- `README.md` is the end-user product homepage: value, core features, install, first-launch recovery, requirements, usage, privacy, and contribution entry point.
+- Keep design boards, UI debugging, architecture diagrams, implementation progress, test commands, and release-maintainer commands out of the homepage; development setup belongs in `CONTRIBUTING.md`.
+- Because the GitHub release is not notarized, the primary Gatekeeper recovery path is `System Settings → Privacy & Security → Security → Open Anyway`, matching Apple guidance. Users should be told to download only from this repository's Releases page.
+- The current prebuilt GitHub release is Apple Silicon (`arm64`); Intel users must build from source until a separate artifact is published.
