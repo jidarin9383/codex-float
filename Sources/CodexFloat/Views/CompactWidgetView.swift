@@ -29,19 +29,26 @@ struct CompactWidgetView: View {
                 .blendMode(.plusLighter)
                 .allowsHitTesting(false)
 
-            // Layer 3 — capacity fill from the leading edge (semantic green / orange / red).
+            // Layer 3 — capacity fill from the leading edge (green / orange / red by remaining %).
             GeometryReader { geo in
-                let filled = max(0, min(geo.size.width, geo.size.width * fillFraction))
-                if filled > 0 {
-                    Rectangle()
-                        .fill(capacityGradient)
-                        .frame(width: filled, height: geo.size.height)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                let width = geo.size.width
+                let height = geo.size.height
+                let filled = max(0, min(width, width * fillFraction))
+                if filled > 0.5 {
+                    // Leading-aligned solid band; clip to capsule via outer chrome.
+                    HStack(spacing: 0) {
+                        Rectangle()
+                            .fill(capacityGradient)
+                            .frame(width: filled, height: height)
+                        Spacer(minLength: 0)
+                    }
+                    .frame(width: width, height: height, alignment: .leading)
                 }
             }
             .allowsHitTesting(false)
 
             // Layer 4 — logo + percent centered in the capsule (both axes).
+            // Freshness (stale/error) stays on the menu-bar pip + detail banner — not a chip on the capsule.
             HStack(spacing: 5) {
                 CodexFloatLogoMarkV2(style: contentOnFill ? .whiteOnDark : .darkOnLight)
                     .frame(width: 16, height: 16)
@@ -110,14 +117,19 @@ struct CompactWidgetView: View {
     }
 
     private var capacityColor: Color {
-        CodexFloatTheme.freshnessTint(snapshot.freshness, attention: snapshot.attention)
+        // Always capacity bands from remaining % (green / orange / red), never yellow.
+        CodexFloatTheme.capacityFillColor(
+            freshness: snapshot.freshness,
+            attention: snapshot.attention
+        )
     }
 
     private var capacityGradient: LinearGradient {
+        // Higher opacity so band color survives glass + wallpaper bleed-through.
         LinearGradient(
             colors: [
-                capacityColor.opacity(0.94),
-                capacityColor.opacity(0.80)
+                capacityColor.opacity(0.98),
+                capacityColor.opacity(0.90)
             ],
             startPoint: .leading,
             endPoint: .trailing

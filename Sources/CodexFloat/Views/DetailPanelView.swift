@@ -304,8 +304,12 @@ struct DetailPanelView: View {
         return ResetTimeFormatting.relativeResetLabel(until: resetsAt, now: .now)
     }
 
+    /// Remaining-quota color (green / orange / red). Stale is a banner/pip, not a yellow fill.
     private var tint: Color {
-        CodexFloatTheme.freshnessTint(snapshot.freshness, attention: snapshot.attention)
+        CodexFloatTheme.capacityFillColor(
+            freshness: snapshot.freshness,
+            attention: snapshot.attention
+        )
     }
 
     private var progressFraction: CGFloat {

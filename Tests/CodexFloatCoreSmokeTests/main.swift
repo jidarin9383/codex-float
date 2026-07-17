@@ -43,6 +43,13 @@ enum Smoke {
         let fixture = QuotaFixtures.current18Percent
         try expect(fixture.remainingPercent == 18, "fixture remaining")
         try expect(fixture.resetOpportunityCount == 2, "fixture reset opportunities")
+        try expect(fixture.attention == .critical, "18% fixture is critical red band")
+        try expect(QuotaFixtures.healthy75Percent.attention == .healthy, "75% healthy green band")
+        try expect(QuotaFixtures.attention35Percent.attention == .attention, "35% orange band")
+        // Stale must keep capacity attention so UI fill color still tracks remaining %.
+        var stale = QuotaFixtures.current18Percent
+        stale.freshness = .stale
+        try expect(stale.attention == .critical, "stale 18% still critical capacity band")
     }
 
     // MARK: - JSONL

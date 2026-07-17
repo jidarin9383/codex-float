@@ -26,6 +26,7 @@
 - Reset opportunities: app-server `availableCount` + optional ChatGPT `wham/rate-limit-reset-credits` dates via local `auth.json` (in-memory token only). UI `第 N 次 · M 月 d 日` or `可用`.
 - The detail sheet does not show manual refresh, normal-state last-updated text, or a settings row. Freshness is automatic and only stale/error states call attention to it.
 - The progress track visualizes remaining quota directly. For 18% remaining, it is 18% filled; it has no vertical marker, `已使用 82%`, or `100%` label.
+- Capacity fill color always follows remaining bands (green >50 / orange >20…50 / red ≤20), including when data is stale. Stale is not a yellow battery fill; compact capsule has no freshness pip (menu bar + detail banner only).
 
 ## 2026-07-14 — Collapse, reset-detail, and color decisions
 
@@ -107,7 +108,7 @@
 
 - App default brand mark is **Ocean Mist v2**: menu bar uses `MenuBarLogoIconV2`; compact widget + detail use `CodexFloatLogoMarkV2`.
 - Fixture visual board: `Design/fixture-qa.html` (menu bar glyph, pips, all static fixtures, detail 18%).
-- Runtime still cycles fixtures via menu「切换示例数据」while `useStaticFixtures` is true.
+- Dev-only static fixtures: `CODEX_FLOAT_STATIC_FIXTURES=1` (not exposed in the production menu).
 - Step 3 protocol layer in `CodexFloatCore`:
   - `JSONLFramer`, `AppServerProtocol`, `RateLimitsMapper`, `RetryBackoff`
   - `CodexExecutableLocator` (PATH + known paths, no shell)

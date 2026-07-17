@@ -61,7 +61,7 @@ The app should feel like a quiet macOS instrument aligned with **macOS Tahoe liq
 - Healthy: system green when remaining **> 50%**.
 - Attention: system orange when remaining **> 20% and ≤ 50%**.
 - Critical: system red when remaining **≤ 20%**.
-- Stale: system yellow with text; never rely on color alone.
+- Capacity fill / progress track always use the bands above when a remaining % is known (including stale cache). Never replace the battery fill with yellow. Stale/error freshness is shown on the menu-bar pip and detail banner/text, not as a chip on the compact capsule.
 - Unknown or loading: `secondaryLabelColor` gray.
 
 ### Typography

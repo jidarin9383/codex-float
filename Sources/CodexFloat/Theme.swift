@@ -43,20 +43,38 @@ enum CodexFloatTheme {
     static let brandMist = Color(red: 0xE6 / 255, green: 0xF2 / 255, blue: 0xF4 / 255)
 
     /// Battery-like quota colors: green >50%, orange 20–50%, red ≤20%.
-    /// Kept vivid so the floating widget fill reads clearly through glass.
+    /// Fixed sRGB (not adaptive system semantic) so the capsule fill stays readable
+    /// through liquid glass on any wallpaper / appearance.
     static func attentionColor(_ attention: QuotaAttention) -> Color {
         switch attention {
         case .healthy:
-            return Color(nsColor: .systemGreen)
+            // Apple systemGreen light reference
+            return Color(red: 0x34 / 255, green: 0xC7 / 255, blue: 0x59 / 255)
         case .attention:
-            return Color(nsColor: .systemOrange)
+            return Color(red: 0xFF / 255, green: 0x9F / 255, blue: 0x0A / 255)
         case .critical:
-            return Color(nsColor: .systemRed)
+            return Color(red: 0xFF / 255, green: 0x3B / 255, blue: 0x30 / 255)
         case .unknown:
             return Color(nsColor: .secondaryLabelColor)
         }
     }
 
+    /// Fill / progress track color for **capacity** (remaining %).
+    ///
+    /// Always follows attention bands when a remaining value is known — including
+    /// `.stale` cached snapshots. Stale is signalled separately (pip / banner / text),
+    /// not by replacing the battery color with yellow (which hid capacity).
+    static func capacityFillColor(freshness: QuotaFreshness, attention: QuotaAttention) -> Color {
+        switch freshness {
+        case .loading, .error:
+            return attentionColor(.unknown)
+        case .current, .stale:
+            return attentionColor(attention)
+        }
+    }
+
+    /// Status / text accent that may emphasize freshness over capacity.
+    /// Prefer `capacityFillColor` for battery fills and remaining-quota tracks.
     static func freshnessTint(_ freshness: QuotaFreshness, attention: QuotaAttention) -> Color {
         switch freshness {
         case .stale:

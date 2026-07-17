@@ -130,7 +130,7 @@ final class QuotaViewModel {
         snapshot = next
     }
 
-    // MARK: - Fixtures (QA)
+    // MARK: - Fixtures (dev QA via CODEX_FLOAT_STATIC_FIXTURES=1 only)
 
     func cycleFixture() {
         guard useStaticFixtures else { return }

@@ -63,7 +63,7 @@ MenuBarExtra / Floating NSPanel / Detail Popover
 - Reset opportunity **count** from `rateLimitResetCredits.availableCount`.
 - Per-credit **expiry dates** (when available) from ChatGPT HTTPS `wham/rate-limit-reset-credits` using the local Codex access token in `auth.json` (in-memory only; never logged). Display `第 N 次` + date when expanded. If dates are missing, count-only — never invent dates.
 - No web jump for the reset-opportunity row.
-- Compact fill and detail progress tint: system green when remaining **> 50%**, orange when **> 20% and ≤ 50%**, red when **≤ 20%**, secondary gray for loading / unknown; stale may use yellow. Stale and error also use text or iconography so color is not the only signal.
+- Compact fill and detail progress tint: system green when remaining **> 50%**, orange when **> 20% and ≤ 50%**, red when **≤ 20%**, secondary gray for loading / unknown. Capacity bands apply whenever a remaining % is known (including stale cache). Stale uses a yellow pip/banner; error uses text/iconography so color is not the only freshness signal.
 - Working display name: **Codex Float**; bundle id: `app.codexfloat.mac`.
 - Detail copy: **下次重置** (absolute + relative), **当前套餐**.
 
