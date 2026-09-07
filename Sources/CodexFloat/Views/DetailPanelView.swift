@@ -13,7 +13,10 @@ struct DetailPanelView: View {
         let rows = isResetListExpanded && canExpandResetList
             ? snapshot.resetOpportunities.filter { $0.expiresAt != nil }.count
             : 0
-        return CodexFloatTheme.detailSize(resetRowsVisible: rows).height
+        return CodexFloatTheme.detailSize(
+            resetRowsVisible: rows,
+            showsWeeklySecondaryRow: snapshot.usesFiveHourGlance
+        ).height
     }
 
     var body: some View {
@@ -76,7 +79,7 @@ struct DetailPanelView: View {
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("本周剩余")
+                Text(snapshot.usesFiveHourGlance ? "5 小时剩余" : "本周剩余")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(.secondary)
                 heroPercentage
@@ -125,13 +128,17 @@ struct DetailPanelView: View {
             }
         }
         .frame(height: 9)
-        .accessibilityLabel("剩余额度进度")
+        .accessibilityLabel(snapshot.usesFiveHourGlance ? "5 小时剩余进度" : "剩余额度进度")
         .accessibilityValue(progressAccessibilityValue)
     }
 
     private var factsSection: some View {
         VStack(spacing: 0) {
             resetFactRow
+            if snapshot.usesFiveHourGlance {
+                Divider().opacity(0.28)
+                weeklyFactRow
+            }
             Divider().opacity(0.28)
             factRow(title: "当前套餐", value: snapshot.planType ?? "—")
             if snapshot.freshness == .stale {
@@ -167,6 +174,31 @@ struct DetailPanelView: View {
             .multilineTextAlignment(.trailing)
         }
         .frame(minHeight: 44)
+    }
+
+    private var weeklyFactRow: some View {
+        HStack(alignment: .center) {
+            Text("本周剩余")
+                .font(.system(size: 13))
+                .foregroundStyle(.secondary)
+            Spacer(minLength: 12)
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(weeklyRemainingValue)
+                    .font(.system(size: 13, weight: .semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(.primary)
+                if let relative = weeklyResetRelativeValue {
+                    Text(relative)
+                        .font(.system(size: 11, weight: .medium))
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .multilineTextAlignment(.trailing)
+        }
+        .frame(minHeight: 44)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(weeklyAccessibilityLabel)
     }
 
     private func factRow(title: String, value: String) -> some View {
@@ -302,6 +334,24 @@ struct DetailPanelView: View {
     private var resetRelativeValue: String? {
         guard let resetsAt = snapshot.resetsAt else { return nil }
         return ResetTimeFormatting.relativeResetLabel(until: resetsAt, now: .now)
+    }
+
+    private var weeklyRemainingValue: String {
+        guard let remaining = snapshot.weeklyWindow?.remainingPercent else { return "—" }
+        return QuotaMath.formatPercent(remaining)
+    }
+
+    private var weeklyResetRelativeValue: String? {
+        guard let resetsAt = snapshot.weeklyWindow?.resetsAt else { return nil }
+        return ResetTimeFormatting.relativeResetLabel(until: resetsAt, now: .now)
+    }
+
+    private var weeklyAccessibilityLabel: String {
+        var parts = ["本周剩余", weeklyRemainingValue]
+        if let relative = weeklyResetRelativeValue {
+            parts.append(relative)
+        }
+        return parts.joined(separator: "，")
     }
 
     /// Remaining-quota color (green / orange / red). Stale is a banner/pip, not a yellow fill.

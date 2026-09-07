@@ -44,6 +44,8 @@ enum Smoke {
         try expect(fixture.remainingPercent == 18, "fixture remaining")
         try expect(fixture.resetOpportunityCount == 2, "fixture reset opportunities")
         try expect(fixture.attention == .critical, "18% fixture is critical red band")
+        try expect(fixture.usesFiveHourGlance, "Plus fixture glances 5-hour remaining")
+        try expect(fixture.weeklyWindow?.remainingPercent == 72, "Plus fixture keeps weekly row")
         try expect(QuotaFixtures.healthy75Percent.attention == .healthy, "75% healthy green band")
         try expect(QuotaFixtures.attention35Percent.attention == .attention, "35% orange band")
         // Stale must keep capacity attention so UI fill color still tracks remaining %.
@@ -153,6 +155,63 @@ enum Smoke {
         try expect(snapshot.resetOpportunityCount == 2, "reset opportunities mapped")
         try expect(snapshot.windows.count == 1, "do not invent secondary window")
         try expect(snapshot.windows.first?.isWeekly == true, "weekly flag from 10080 mins")
+        try expect(snapshot.usesFiveHourGlance == false, "weekly-only Plus is not a 5-hour glance")
+
+        let plusBoth = WireGetAccountRateLimitsResponse(
+            rateLimits: WireRateLimitSnapshot(
+                planType: "plus",
+                primary: WireRateLimitWindow(
+                    usedPercent: 82,
+                    windowDurationMins: 10080,
+                    resetsAt: 1_800_600_000
+                ),
+                secondary: WireRateLimitWindow(
+                    usedPercent: 40,
+                    windowDurationMins: 300,
+                    resetsAt: 1_800_010_800
+                )
+            )
+        )
+        let plusGlance = RateLimitsMapper.snapshot(from: plusBoth)
+        try expect(plusGlance.remainingPercent == 60, "Plus glance is 5-hour remaining")
+        try expect(plusGlance.usesFiveHourGlance, "Plus with 300-min window uses 5-hour glance")
+        try expect(plusGlance.weeklyWindow?.remainingPercent == 18, "weekly stays available for detail")
+
+        let proBoth = WireGetAccountRateLimitsResponse(
+            rateLimits: WireRateLimitSnapshot(
+                planType: "pro",
+                primary: WireRateLimitWindow(
+                    usedPercent: 82,
+                    windowDurationMins: 10080,
+                    resetsAt: 1_800_600_000
+                ),
+                secondary: WireRateLimitWindow(
+                    usedPercent: 40,
+                    windowDurationMins: 300,
+                    resetsAt: 1_800_010_800
+                )
+            )
+        )
+        let proGlance = RateLimitsMapper.snapshot(from: proBoth)
+        try expect(proGlance.remainingPercent == 18, "Pro glance stays weekly")
+        try expect(proGlance.usesFiveHourGlance == false, "Pro never uses 5-hour glance")
+
+        let usageJSON: [String: Any] = [
+            "rate_limit": [
+                "primary_window": [
+                    "used_percent": 40,
+                    "limit_window_seconds": 18_000,
+                    "reset_at": 1_800_010_800
+                ],
+                "secondary_window": [
+                    "used_percent": 82,
+                    "limit_window_seconds": 604_800
+                ]
+            ]
+        ]
+        let parsedFiveHour = ChatGPTQuotaClient.fiveHourWindow(from: usageJSON)
+        try expect(parsedFiveHour?.remainingPercent == 60, "usage JSON 5-hour remaining")
+        try expect(ChatGPTQuotaClient.fiveHourWindow(from: ["rate_limit": ["primary_window": ["used_percent": 10, "limit_window_seconds": 604800]]]) == nil, "weekly usage does not invent 5-hour")
 
         // A duration-unknown primary remains visible as a window but is never relabeled weekly.
         let noDuration = WireGetAccountRateLimitsResponse(

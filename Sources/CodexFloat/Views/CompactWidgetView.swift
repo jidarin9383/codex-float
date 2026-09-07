@@ -137,10 +137,10 @@ struct CompactWidgetView: View {
     }
 
     private var accessibilityLabel: String {
-        if let remaining = snapshot.remainingPercent {
-            return "\(CodexFloatTheme.productName) 剩余 \(QuotaMath.formatPercent(remaining))"
-        }
-        return snapshot.statusMessage ?? CodexFloatTheme.productName
+        QuotaAccessibility.menuBarLabel(
+            productName: CodexFloatTheme.productName,
+            snapshot: snapshot
+        )
     }
 
     private var accessibilityValue: String {

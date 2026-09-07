@@ -10,11 +10,13 @@
 
 ## Product Rules
 
-- The primary value is ambient awareness: weekly remaining percentage must be visible without opening a dashboard.
+- The primary value is ambient awareness: remaining quota for the active glance window must be visible without opening a dashboard.
+- **Plus** uses the 5-hour window as the glance metric when the source returns one; weekly remaining stays in the expanded detail. If Plus has no 5-hour window, fall back to weekly. Never invent a 5-hour metric.
+- **Every other plan** always uses the weekly window as the glance metric. Do not show a 5-hour row for those plans even if a short window is present in the payload.
 - Support both a menu bar surface and an optional always-on-top floating surface.
 - Keep the floating surface calm, compact, readable, and non-interactive until clicked.
 - Show freshness and failure honestly. Never present cached quota as current without a visible timestamp or stale state.
-- Treat missing short-window data as a valid state. Do not invent a 5-hour window when Codex returns only a weekly window.
+- Treat missing short-window data as a valid state.
 
 ## Data and Security
 
@@ -24,7 +26,7 @@
   - `https://chatgpt.com/backend-api/wham/usage`
   - `https://chatgpt.com/backend-api/wham/rate-limit-reset-credits`
 - Tokens and account IDs must stay in memory for the request only. **Never** log, print, copy, or persist them. Never put them in status messages or diagnostics.
-- If auth/HTTPS enrichment fails, keep app-server data and show count-only reset rows (no invented dates).
+- If auth/HTTPS enrichment fails, keep app-server data: count-only reset rows (no invented dates) and no invented 5-hour window. `/wham/usage` may attach a real 5-hour window for Plus only.
 - Launch `codex` with `Process` and structured arguments. Do not build a shell command string.
 - Store only non-secret preferences and optional local quota samples.
 - Do not send telemetry or usage data off-device unless a future PRD explicitly adds an opt-in requirement.

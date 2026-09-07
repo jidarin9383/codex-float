@@ -6,7 +6,7 @@ The app should feel like a quiet macOS instrument aligned with **macOS Tahoe liq
 
 ## Visual Principles
 
-- Weekly remaining quota is the only hero metric.
+- Remaining quota for the active glance window is the only hero metric. Plus with a 5-hour window uses that remaining percentage; every other plan uses weekly remaining.
 - Reveal complexity progressively: glance, click, inspect.
 - Use Tahoe-style glass (`.ultraThinMaterial`, specular top sheen, luminous edge) and semantic system colors rather than opaque cards or neon gradients.
 - Reserve warning color for low quota or stale data; normal operation should not glow or pulse.
@@ -44,12 +44,14 @@ The app should feel like a quiet macOS instrument aligned with **macOS Tahoe liq
 ### Detail Panel (floating expanded)
 
 - Natural target size: approximately 320 × 372 pt; expands from the collapsed widget in place.
-- Top brand row: **logo + product name `Codex Float`**, collapse control (`chevron.right`) on the trailing edge; weekly percentage hero below (tinted by attention color).
-- Middle region: one remaining-quota progress track and factual rows:
-  - **下次重置** — absolute date/time + relative countdown
+- Top brand row: **logo + product name `Codex Float`**, collapse control (`chevron.right`) on the trailing edge; glance percentage hero below (tinted by attention color).
+- Hero label: **5 小时剩余** when Plus has a 5-hour window; otherwise **本周剩余**.
+- Middle region: one remaining-quota progress track (the glance window) and factual rows:
+  - **下次重置** — reset of the glance window; absolute date/time + relative countdown
+  - **本周剩余** — Plus with a 5-hour glance only; weekly percent plus weekly reset. Hidden for every other plan.
   - **当前套餐** — plan type when available
 - Bottom region: **重置机会** summary (`N 次可用`); expand chevron only when per-credit expiry dates exist; expanded list shows `第 N 次` + date.
-- Additional limit windows appear as secondary rows only when present.
+- Do not show a 5-hour row for Pro or other non-Plus plans.
 
 ## Tokens
 
@@ -121,14 +123,14 @@ The app should feel like a quiet macOS instrument aligned with **macOS Tahoe liq
 - No circular liquid meter.
 - No always-visible window controls.
 - No flashing or breathing status lights.
-- No invented 5-hour metric when the source does not return one.
+- No invented 5-hour metric when the source does not return one. No 5-hour UI for non-Plus plans.
 - No dashboard grid of metrics in the collapsed widget.
 - No custom imitation of macOS controls when a native control exists.
 
 ## Selected Direction
 
 - The selected visual route is the light-mode right-edge widget that expands inward.
-- Preserve its edge attachment, warm translucent material, large remaining percentage, one weekly progress track, and flat factual rows.
+- Preserve its edge attachment, warm translucent material, large remaining percentage, one glance progress track, and flat factual rows.
 - Replace all English UI copy with Simplified Chinese.
 - Show dynamic reset-opportunity count; optional dated rows when ChatGPT credits API provides expiries (never invent dates).
 - Add one native top-right collapse button; it returns the panel to the narrow right-edge widget and is not a close, settings, or refresh action.

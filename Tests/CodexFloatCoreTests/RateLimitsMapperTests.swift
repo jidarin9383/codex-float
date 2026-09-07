@@ -42,6 +42,88 @@ final class RateLimitsMapperTests: XCTestCase {
         XCTAssertEqual(snapshot.windows.filter(\.isWeekly).count, 0)
     }
 
+    func testPlusFiveHourWindowBecomesGlanceMetric() {
+        let snapshot = RateLimitsMapper.snapshot(
+            from: response(
+                primary: window(used: 73, duration: 300),
+                planType: "plus"
+            )
+        )
+
+        XCTAssertEqual(snapshot.remainingPercent, 27)
+        XCTAssertTrue(snapshot.usesFiveHourGlance)
+        XCTAssertEqual(snapshot.windows.first?.isFiveHour, true)
+        XCTAssertEqual(snapshot.resetsAt, Date(timeIntervalSince1970: 1_800_000_000))
+    }
+
+    func testPlusPrefersFiveHourOverWeeklyForGlance() {
+        let snapshot = RateLimitsMapper.snapshot(
+            from: response(
+                primary: window(used: 82, duration: 10_080, resetsAt: 1_800_600_000),
+                secondary: window(used: 40, duration: 300, resetsAt: 1_800_010_800),
+                planType: "plus"
+            )
+        )
+
+        XCTAssertEqual(snapshot.remainingPercent, 60)
+        XCTAssertEqual(snapshot.resetsAt, Date(timeIntervalSince1970: 1_800_010_800))
+        XCTAssertTrue(snapshot.usesFiveHourGlance)
+        XCTAssertEqual(snapshot.weeklyWindow?.remainingPercent, 18)
+    }
+
+    func testProKeepsWeeklyGlanceWhenFiveHourWindowPresent() {
+        let snapshot = RateLimitsMapper.snapshot(
+            from: response(
+                primary: window(used: 82, duration: 10_080, resetsAt: 1_800_600_000),
+                secondary: window(used: 40, duration: 300, resetsAt: 1_800_010_800),
+                planType: "pro"
+            )
+        )
+
+        XCTAssertEqual(snapshot.remainingPercent, 18)
+        XCTAssertEqual(snapshot.resetsAt, Date(timeIntervalSince1970: 1_800_600_000))
+        XCTAssertFalse(snapshot.usesFiveHourGlance)
+        XCTAssertEqual(snapshot.planType, "Pro")
+    }
+
+    func testHTTPSFiveHourEnrichesPlusOnly() {
+        let plusWeekly = RateLimitsMapper.snapshot(
+            from: response(
+                primary: window(used: 82, duration: 10_080),
+                planType: "plus"
+            )
+        )
+        let fiveHour = QuotaWindow(
+            id: "five-hour",
+            remainingPercent: 60,
+            usedPercent: 40,
+            windowDurationMins: 300,
+            resetsAt: Date(timeIntervalSince1970: 1_800_010_800),
+            isFiveHour: true
+        )
+
+        let plusMerged = RateLimitsMapper.merging(
+            plusWeekly,
+            resetCredits: ResetCreditsDetail(fiveHourWindow: fiveHour)
+        )
+        XCTAssertEqual(plusMerged.remainingPercent, 60)
+        XCTAssertTrue(plusMerged.usesFiveHourGlance)
+
+        let proWeekly = RateLimitsMapper.snapshot(
+            from: response(
+                primary: window(used: 82, duration: 10_080),
+                planType: "pro"
+            )
+        )
+        let proMerged = RateLimitsMapper.merging(
+            proWeekly,
+            resetCredits: ResetCreditsDetail(fiveHourWindow: fiveHour)
+        )
+        XCTAssertEqual(proMerged.remainingPercent, 18)
+        XCTAssertFalse(proMerged.usesFiveHourGlance)
+        XCTAssertEqual(proMerged.windows.filter(\.isFiveHour).count, 0)
+    }
+
     func testHTTPSDetailAddsDatesWithoutReplacingAppServerCount() {
         let appServer = RateLimitsMapper.snapshot(
             from: response(
@@ -99,24 +181,57 @@ final class RateLimitsMapperTests: XCTestCase {
             QuotaAccessibility.menuBarLabel(productName: "Codex Float", snapshot: snapshot),
             "Codex Float 剩余 18%，无法读取额度"
         )
+
+        var plus = QuotaSnapshot(
+            remainingPercent: 18,
+            planType: "Plus",
+            windows: [
+                QuotaWindow(
+                    id: "five-hour",
+                    remainingPercent: 18,
+                    usedPercent: 82,
+                    windowDurationMins: 300,
+                    isFiveHour: true
+                )
+            ],
+            freshness: .current
+        )
+        XCTAssertEqual(
+            QuotaAccessibility.menuBarLabel(productName: "Codex Float", snapshot: plus),
+            "Codex Float 5 小时剩余 18%，数据最新"
+        )
+        plus.planType = "Pro"
+        XCTAssertEqual(
+            QuotaAccessibility.menuBarLabel(productName: "Codex Float", snapshot: plus),
+            "Codex Float 剩余 18%，数据最新"
+        )
     }
 
     private func response(
         primary: WireRateLimitWindow?,
         secondary: WireRateLimitWindow? = nil,
-        resetCount: Int64? = nil
+        resetCount: Int64? = nil,
+        planType: String? = nil
     ) -> WireGetAccountRateLimitsResponse {
         WireGetAccountRateLimitsResponse(
-            rateLimits: WireRateLimitSnapshot(primary: primary, secondary: secondary),
+            rateLimits: WireRateLimitSnapshot(
+                planType: planType,
+                primary: primary,
+                secondary: secondary
+            ),
             rateLimitResetCredits: resetCount.map(WireRateLimitResetCredits.init(availableCount:))
         )
     }
 
-    private func window(used: Double, duration: Int64?) -> WireRateLimitWindow {
+    private func window(
+        used: Double,
+        duration: Int64?,
+        resetsAt: Int64 = 1_800_000_000
+    ) -> WireRateLimitWindow {
         WireRateLimitWindow(
             usedPercent: used,
             windowDurationMins: duration,
-            resetsAt: 1_800_000_000
+            resetsAt: resetsAt
         )
     }
 }

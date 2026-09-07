@@ -40,6 +40,7 @@ public actor QuotaRepository {
     private var refreshInFlight = false
     private var lastAttemptAt: Date?
     private var cachedResetCreditExpirations: [Date] = []
+    private var cachedFiveHourWindow: QuotaWindow?
     private var lastEnrichmentSuccessAt: Date?
     private var enrichmentTask: Task<Void, Never>?
 
@@ -133,16 +134,19 @@ public actor QuotaRepository {
                 wire = try await client.readRateLimits()
             }
             var snapshot = RateLimitsMapper.snapshot(from: wire, fetchedAt: now, freshness: .current)
-            // Prefer truthful empty-weekly state over inventing a short window.
-            if snapshot.remainingPercent == nil {
-                snapshot.statusMessage = "未返回本周额度窗口"
-                snapshot.freshness = .current
-            }
-            if !cachedResetCreditExpirations.isEmpty {
+            if !cachedResetCreditExpirations.isEmpty || cachedFiveHourWindow != nil {
                 snapshot = RateLimitsMapper.merging(
                     snapshot,
-                    resetCredits: ResetCreditsDetail(expiresAt: cachedResetCreditExpirations)
+                    resetCredits: ResetCreditsDetail(
+                        expiresAt: cachedResetCreditExpirations,
+                        fiveHourWindow: cachedFiveHourWindow
+                    )
                 )
+            }
+            // Prefer truthful empty glance state over inventing a short window.
+            if snapshot.remainingPercent == nil {
+                snapshot.statusMessage = snapshot.isPlusPlan ? "未返回额度窗口" : "未返回本周额度窗口"
+                snapshot.freshness = .current
             }
             lastSuccess = snapshot
             backoff.registerSuccess()
@@ -230,10 +234,16 @@ public actor QuotaRepository {
 
         lastEnrichmentSuccessAt = succeededAt
         cachedResetCreditExpirations = detail.expiresAt.sorted()
+        if let fiveHour = detail.fiveHourWindow, fiveHour.isFiveHour {
+            cachedFiveHourWindow = fiveHour
+        }
         guard let lastSuccess else { return }
         self.lastSuccess = RateLimitsMapper.merging(
             lastSuccess,
-            resetCredits: ResetCreditsDetail(expiresAt: cachedResetCreditExpirations)
+            resetCredits: ResetCreditsDetail(
+                expiresAt: cachedResetCreditExpirations,
+                fiveHourWindow: cachedFiveHourWindow
+            )
         )
     }
 

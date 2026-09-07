@@ -150,3 +150,10 @@
 - Supersedes the earlier arm64-only release note: GitHub Releases now publish one `macos-universal.zip` containing `arm64` and `x86_64` slices.
 - `scripts/package-app.sh` uses SwiftPM multi-architecture builds and rejects the package unless `lipo` verifies both slices before signing.
 - Minimum deployment target remains macOS 14 for both Apple Silicon and Intel Macs.
+
+## 2026-09-07 — Plus 5-hour glance (implemented)
+
+- User decision: Plus glance metric is 5-hour remaining when the source returns that window; weekly remaining stays a detail fact row. Every other plan keeps weekly as the glance metric and must not show a 5-hour row.
+- 5-hour identity is exact `300` minutes (app-server) or `18_000` seconds (`/wham/usage`). Never invent the window. Plus without 5-hour data falls back to weekly.
+- Source order: app-server `primary`/`secondary` first; optional cached `/wham/usage` may attach a real 5-hour window for Plus only. HTTPS still must not replace app-server weekly data or reset-credit count.
+- Compact widget and menu bar continue to show a single percentage (`QuotaSnapshot.remainingPercent`); mapper selects which window that number represents.

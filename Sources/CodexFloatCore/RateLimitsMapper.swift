@@ -5,6 +5,12 @@ public enum RateLimitsMapper {
     /// Weekly window duration used by Codex (7 days).
     public static let weeklyWindowMinutes: Int64 = 10_080
 
+    /// Plus short window (5 hours).
+    public static let fiveHourWindowMinutes: Int64 = 300
+
+    /// ChatGPT `/wham/usage` reports the same window in seconds.
+    public static let fiveHourWindowSeconds: Int64 = 18_000
+
     /// Preferred limit bucket when multi-limit maps are present.
     public static let preferredLimitID = "codex"
 
@@ -18,13 +24,14 @@ public enum RateLimitsMapper {
     ) -> QuotaSnapshot {
         let selected = selectSnapshot(from: response)
         let windows = makeWindows(from: selected)
-        let weekly = windows.first(where: \.isWeekly)
+        let planType = displayPlanType(selected.planType)
+        let glance = glanceWindow(planType: planType, windows: windows)
 
         let count = validatedResetOpportunityCount(response.rateLimitResetCredits?.availableCount)
         return QuotaSnapshot(
-            remainingPercent: weekly.map { QuotaMath.remaining(fromUsedPercent: $0.usedPercent) },
-            planType: displayPlanType(selected.planType),
-            resetsAt: weekly?.resetsAt,
+            remainingPercent: glance?.remainingPercent,
+            planType: planType,
+            resetsAt: glance?.resetsAt,
             resetOpportunityCount: count,
             resetOpportunities: opportunities(count: count, expiresAt: []),
             windows: windows,
@@ -43,7 +50,28 @@ public enum RateLimitsMapper {
         let count = validatedResetOpportunityCount(snapshot.resetOpportunityCount)
         next.resetOpportunityCount = count
         next.resetOpportunities = opportunities(count: count, expiresAt: resetCredits.expiresAt)
+        if isPlusPlan(next.planType),
+           next.fiveHourWindow == nil,
+           let fiveHour = resetCredits.fiveHourWindow,
+           fiveHour.isFiveHour {
+            next.windows.append(fiveHour)
+            let glance = glanceWindow(planType: next.planType, windows: next.windows)
+            next.remainingPercent = glance?.remainingPercent
+            next.resetsAt = glance?.resetsAt
+        }
         return next
+    }
+
+    /// Glance window: 5-hour only for Plus when present; weekly for everyone else.
+    public static func glanceWindow(planType: String?, windows: [QuotaWindow]) -> QuotaWindow? {
+        if isPlusPlan(planType), let fiveHour = windows.first(where: \.isFiveHour) {
+            return fiveHour
+        }
+        return windows.first(where: \.isWeekly)
+    }
+
+    public static func isPlusPlan(_ planType: String?) -> Bool {
+        planType?.lowercased() == "plus"
     }
 
     public static func opportunities(count: Int?, expiresAt: [Date]) -> [ResetOpportunity] {
@@ -96,6 +124,16 @@ public enum RateLimitsMapper {
         return windowDurationMins == weeklyWindowMinutes
     }
 
+    public static func isFiveHour(windowDurationMins: Int64?) -> Bool {
+        guard let windowDurationMins else { return false }
+        return windowDurationMins == fiveHourWindowMinutes
+    }
+
+    public static func isFiveHour(windowDurationSeconds: Int64?) -> Bool {
+        guard let windowDurationSeconds else { return false }
+        return windowDurationSeconds == fiveHourWindowSeconds
+    }
+
     public static func isStale(
         fetchedAt: Date,
         now: Date = .now,
@@ -111,6 +149,7 @@ public enum RateLimitsMapper {
         from wire: WireRateLimitWindow
     ) -> QuotaWindow {
         let weekly = isWeekly(windowDurationMins: wire.windowDurationMins)
+        let fiveHour = isFiveHour(windowDurationMins: wire.windowDurationMins)
         let resetsAt = wire.resetsAt.map { Date(timeIntervalSince1970: TimeInterval($0)) }
         let remaining = QuotaMath.remaining(fromUsedPercent: wire.usedPercent)
         return QuotaWindow(
@@ -119,7 +158,8 @@ public enum RateLimitsMapper {
             usedPercent: wire.usedPercent,
             windowDurationMins: wire.windowDurationMins.map(Int.init),
             resetsAt: resetsAt,
-            isWeekly: weekly
+            isWeekly: weekly,
+            isFiveHour: fiveHour
         )
     }
 

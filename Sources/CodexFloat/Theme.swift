@@ -9,6 +9,8 @@ enum CodexFloatTheme {
     static let detailSize = CGSize(width: 320, height: 372)
     /// One expanded reset-credit row (divider + line).
     static let detailResetRowHeight: CGFloat = 36
+    /// Plus weekly remaining row shown under a 5-hour glance.
+    static let detailWeeklyRowHeight: CGFloat = 44
     /// Transparent margin so shape-following shadows are not clipped by the NSPanel rect.
     static let panelShadowBleed: CGFloat = 28
     /// Tahoe-forward continuous radii.
@@ -17,17 +19,35 @@ enum CodexFloatTheme {
     static let groupRadius: CGFloat = 14
     static let baseUnit: CGFloat = 4
 
-    static func detailSize(resetRowsVisible: Int) -> CGSize {
+    static func detailSize(resetRowsVisible: Int, showsWeeklySecondaryRow: Bool = false) -> CGSize {
         let extra = CGFloat(max(0, resetRowsVisible)) * detailResetRowHeight
+            + (showsWeeklySecondaryRow ? detailWeeklyRowHeight : 0)
         return CGSize(width: detailSize.width, height: detailSize.height + extra)
     }
 
-    static func contentSize(expanded: Bool, resetRowsVisible: Int = 0) -> CGSize {
-        expanded ? detailSize(resetRowsVisible: resetRowsVisible) : widgetSize
+    static func contentSize(
+        expanded: Bool,
+        resetRowsVisible: Int = 0,
+        showsWeeklySecondaryRow: Bool = false
+    ) -> CGSize {
+        expanded
+            ? detailSize(
+                resetRowsVisible: resetRowsVisible,
+                showsWeeklySecondaryRow: showsWeeklySecondaryRow
+            )
+            : widgetSize
     }
 
-    static func panelSize(expanded: Bool, resetRowsVisible: Int = 0) -> CGSize {
-        let content = contentSize(expanded: expanded, resetRowsVisible: resetRowsVisible)
+    static func panelSize(
+        expanded: Bool,
+        resetRowsVisible: Int = 0,
+        showsWeeklySecondaryRow: Bool = false
+    ) -> CGSize {
+        let content = contentSize(
+            expanded: expanded,
+            resetRowsVisible: resetRowsVisible,
+            showsWeeklySecondaryRow: showsWeeklySecondaryRow
+        )
         let pad = panelShadowBleed * 2
         return CGSize(width: content.width + pad, height: content.height + pad)
     }

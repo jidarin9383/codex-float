@@ -39,12 +39,14 @@ MenuBarExtra / Floating NSPanel / Detail Popover
 - Selects the `codex` entry from `rateLimitsByLimitId` when present.
 - Falls back to the backward-compatible `rateLimits` snapshot.
 - Normalizes used percentage into remaining percentage without relabeling unknown windows.
-- Populates top-level weekly fields only from an exact 10,080-minute window; short or duration-unknown windows remain secondary data.
+- Identifies an exact 10,080-minute weekly window and an exact 300-minute (5-hour) window. Duration-unknown windows remain unlabeled.
+- Glance fields (`remainingPercent`, `resetsAt`) come from the 5-hour window **only when `planType` is Plus and that window exists**. Every other plan, and Plus without a 5-hour window, uses the weekly window. Short windows on non-Plus plans are stored but never promoted to glance or detail UI.
+- Optional HTTPS `/wham/usage` enrichment may attach a 5-hour window for Plus when app-server omitted it. It must never invent dates or windows, never replace app-server weekly data, and never promote a 5-hour glance for non-Plus plans.
 - Owns refresh policy, stale-state calculation, retry backoff, and last successful snapshot.
 - Emits a domain model that contains only UI-safe, non-secret data.
 - Maps `rateLimitResetCredits.availableCount` into an optional reset-opportunity count for the detail view.
 - Treats the app-server reset count as authoritative and accepts only `0...100` before creating display rows.
-- Publishes app-server snapshots without awaiting optional HTTPS expiry enrichment; enrichment is cached for 15 minutes and may add dates only.
+- Publishes app-server snapshots without awaiting optional HTTPS enrichment; enrichment is cached for 15 minutes and may add reset-credit dates and, for Plus only, a real 5-hour window from `/wham/usage`.
 
 ### `LocalSampleStore`
 
@@ -65,7 +67,7 @@ MenuBarExtra / Floating NSPanel / Detail Popover
 - No web jump for the reset-opportunity row.
 - Compact fill and detail progress tint: system green when remaining **> 50%**, orange when **> 20% and ≤ 50%**, red when **≤ 20%**, secondary gray for loading / unknown. Capacity bands apply whenever a remaining % is known (including stale cache). Stale uses a yellow pip/banner; error uses text/iconography so color is not the only freshness signal.
 - Working display name: **Codex Float**; bundle id: `app.codexfloat.mac`.
-- Detail copy: **下次重置** (absolute + relative), **当前套餐**.
+- Detail copy: Plus with a 5-hour glance uses **5 小时剩余** as the hero and keeps weekly remaining as a fact row; all other cases use **本周剩余**. **下次重置** is the glance window (absolute + relative). **当前套餐** is unchanged.
 
 ## Protocol Contract
 
@@ -137,7 +139,7 @@ The selected path is persisted as a bookmark or plain non-secret preference as a
 
 ## Test Strategy
 
-- XCTest (`swift test`): JSONL splitting, interleaved notifications, request correlation, timeout, malformed JSON, process exit, nullable fields, multi-limit selection, exact-weekly selection, count bounds and authority, percentage normalization, reset formatting, stale calculation, and backoff.
+- XCTest (`swift test`): JSONL splitting, interleaved notifications, request correlation, timeout, malformed JSON, process exit, nullable fields, multi-limit selection, exact-weekly selection, Plus-only 5-hour glance, non-Plus weekly glance, count bounds and authority, percentage normalization, reset formatting, stale calculation, and backoff.
 - Integration test: launch the real local `codex app-server` only behind an explicit developer flag; never run in normal CI.
 - Static UI tests: fixed current, stale, error, 0%, 100%, long plan name, missing reset time, and multiple-window fixtures.
 - Visual QA: light/dark, 1x/2x display, multiple Spaces, full-screen auxiliary behavior, multiple displays, and localization overflow.

@@ -105,7 +105,8 @@ final class FloatingPanelController {
         guard let panel else { return }
         let size = CodexFloatTheme.panelSize(
             expanded: viewModel.isExpanded,
-            resetRowsVisible: viewModel.visibleResetOpportunityDetailRows
+            resetRowsVisible: viewModel.visibleResetOpportunityDetailRows,
+            showsWeeklySecondaryRow: viewModel.isExpanded && viewModel.snapshot.usesFiveHourGlance
         )
         let current = panel.frame
         // Keep the visual trailing edge of the *content* stable (account for shadow bleed).

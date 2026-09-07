@@ -5,10 +5,17 @@ public struct ResetCreditsDetail: Equatable, Sendable {
     public var availableCount: Int?
     /// Sorted expiry timestamps when the API provides them.
     public var expiresAt: [Date]
+    /// Optional 5-hour window parsed from `/wham/usage`. Mapper applies it to Plus only.
+    public var fiveHourWindow: QuotaWindow?
 
-    public init(availableCount: Int? = nil, expiresAt: [Date] = []) {
+    public init(
+        availableCount: Int? = nil,
+        expiresAt: [Date] = [],
+        fiveHourWindow: QuotaWindow? = nil
+    ) {
         self.availableCount = availableCount
         self.expiresAt = expiresAt
+        self.fiveHourWindow = fiveHourWindow
     }
 }
 
@@ -82,7 +89,8 @@ public actor ChatGPTQuotaClient {
         }
 
         expires.sort()
-        return ResetCreditsDetail(availableCount: count, expiresAt: expires)
+        let fiveHour = usage.flatMap { Self.fiveHourWindow(from: $0) }
+        return ResetCreditsDetail(availableCount: count, expiresAt: expires, fiveHourWindow: fiveHour)
     }
 
     // MARK: - HTTP
@@ -153,6 +161,25 @@ public actor ChatGPTQuotaClient {
         return nil
     }
 
+    /// Extract a 5-hour quota window from a `/wham/usage` object. Returns nil unless
+    /// `limit_window_seconds` is exactly 18,000 or duration minutes is exactly 300.
+    public static func fiveHourWindow(from value: Any) -> QuotaWindow? {
+        guard let object = value as? [String: Any] else { return nil }
+        let rateLimit = object["rate_limit"] ?? object["rateLimit"]
+        guard let rateLimit else { return nil }
+
+        let candidates = [
+            nestedValue(rateLimit, keys: ["primary_window", "primaryWindow"]),
+            nestedValue(rateLimit, keys: ["secondary_window", "secondaryWindow"])
+        ]
+        for candidate in candidates {
+            if let window = parseFiveHourWindow(candidate) {
+                return window
+            }
+        }
+        return nil
+    }
+
     /// Recursively collect expiry timestamps from a credits payload.
     public static func collectExpirations(from value: Any) -> [Date] {
         var output: [Date] = []
@@ -186,6 +213,89 @@ public actor ChatGPTQuotaClient {
                 visit(child, into: &output)
             }
         }
+    }
+
+    private static func nestedValue(_ value: Any?, keys: [String]) -> Any? {
+        guard let object = value as? [String: Any] else { return nil }
+        for key in keys {
+            if let nested = object[key] {
+                return nested
+            }
+        }
+        return nil
+    }
+
+    private static func parseFiveHourWindow(_ value: Any?) -> QuotaWindow? {
+        guard let object = value as? [String: Any] else { return nil }
+
+        let used = doubleValue(
+            object,
+            keys: ["used_percent", "usedPercent"]
+        )
+        guard let used else { return nil }
+
+        let seconds = int64Value(
+            object,
+            keys: ["limit_window_seconds", "limitWindowSeconds"]
+        )
+        let minutes = int64Value(
+            object,
+            keys: ["window_duration_mins", "windowDurationMins"]
+        )
+        let isFiveHour = RateLimitsMapper.isFiveHour(windowDurationMins: minutes)
+            || RateLimitsMapper.isFiveHour(windowDurationSeconds: seconds)
+        guard isFiveHour else { return nil }
+
+        let resetsAt = parseDate(
+            object["reset_at"] ?? object["resetAt"] ?? object["resetsAt"]
+        )
+        return QuotaWindow(
+            id: "five-hour",
+            remainingPercent: QuotaMath.remaining(fromUsedPercent: used),
+            usedPercent: used,
+            windowDurationMins: Int(RateLimitsMapper.fiveHourWindowMinutes),
+            resetsAt: resetsAt,
+            isFiveHour: true
+        )
+    }
+
+    private static func doubleValue(_ object: [String: Any], keys: [String]) -> Double? {
+        for key in keys {
+            if let number = object[key] as? NSNumber {
+                return number.doubleValue
+            }
+            if let value = object[key] as? Double {
+                return value
+            }
+            if let value = object[key] as? Int {
+                return Double(value)
+            }
+            if let value = object[key] as? Int64 {
+                return Double(value)
+            }
+            if let text = object[key] as? String, let parsed = Double(text) {
+                return parsed
+            }
+        }
+        return nil
+    }
+
+    private static func int64Value(_ object: [String: Any], keys: [String]) -> Int64? {
+        for key in keys {
+            if let number = object[key] as? NSNumber {
+                return number.int64Value
+            }
+            if let value = object[key] as? Int64 {
+                return value
+            }
+            if let value = object[key] as? Int {
+                return Int64(value)
+            }
+            if let text = object[key] as? String, let parsed = Int64(text) {
+                return parsed
+            }
+        }
+        return nil
     }
 
     private static func parseDate(_ value: Any?) -> Date? {

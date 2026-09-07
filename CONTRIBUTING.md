@@ -41,7 +41,7 @@ Thanks for helping improve Codex Float.
 - Launch `codex` with `Process` and structured arguments (no shell strings).
 - User-facing UI copy stays **Simplified Chinese**.
 - Commit messages and technical docs stay **English**.
-- Do not invent a 5-hour window when Codex only returns a weekly window.
+- Do not invent a 5-hour window when Codex only returns a weekly window. Show 5-hour remaining only for Plus, and only when the source returns that window.
 - Avoid third-party dependencies unless the standard library cannot meet a need.
 
 Sources of truth: `PRD.md`, `Tech-Spec.md`, `DESIGN.md`, `AGENTS.md`.

@@ -29,7 +29,7 @@ public enum QuotaAttention: Equatable, Sendable {
     }
 }
 
-/// One limit window returned by Codex (weekly, short, or unlabeled).
+/// One limit window returned by Codex (weekly, 5-hour, or unlabeled).
 public struct QuotaWindow: Equatable, Sendable, Identifiable {
     public var id: String
     public var remainingPercent: Double
@@ -37,6 +37,7 @@ public struct QuotaWindow: Equatable, Sendable, Identifiable {
     public var windowDurationMins: Int?
     public var resetsAt: Date?
     public var isWeekly: Bool
+    public var isFiveHour: Bool
 
     public init(
         id: String,
@@ -44,7 +45,8 @@ public struct QuotaWindow: Equatable, Sendable, Identifiable {
         usedPercent: Double,
         windowDurationMins: Int? = nil,
         resetsAt: Date? = nil,
-        isWeekly: Bool = false
+        isWeekly: Bool = false,
+        isFiveHour: Bool = false
     ) {
         self.id = id
         self.remainingPercent = remainingPercent
@@ -52,6 +54,7 @@ public struct QuotaWindow: Equatable, Sendable, Identifiable {
         self.windowDurationMins = windowDurationMins
         self.resetsAt = resetsAt
         self.isWeekly = isWeekly
+        self.isFiveHour = isFiveHour
     }
 }
 
@@ -89,6 +92,24 @@ public struct QuotaSnapshot: Equatable, Sendable {
         case .stale, .current:
             return .from(remainingPercent: remainingPercent)
         }
+    }
+
+    /// Display plan is normalized to `Plus` by the mapper; compare case-insensitively.
+    public var isPlusPlan: Bool {
+        planType?.lowercased() == "plus"
+    }
+
+    public var weeklyWindow: QuotaWindow? {
+        windows.first(where: \.isWeekly)
+    }
+
+    public var fiveHourWindow: QuotaWindow? {
+        windows.first(where: \.isFiveHour)
+    }
+
+    /// Plus glance uses 5-hour remaining when that window exists; every other plan stays weekly.
+    public var usesFiveHourGlance: Bool {
+        isPlusPlan && fiveHourWindow != nil
     }
 
     public init(
@@ -136,7 +157,8 @@ public enum QuotaAccessibility {
             return snapshot.statusMessage ?? productName
         }
 
-        let value = "\(productName) 剩余 \(QuotaMath.formatPercent(remaining))"
+        let metric = snapshot.usesFiveHourGlance ? "5 小时剩余" : "剩余"
+        let value = "\(productName) \(metric) \(QuotaMath.formatPercent(remaining))"
         switch snapshot.freshness {
         case .current:
             return "\(value)，数据最新"
@@ -281,29 +303,47 @@ public enum QuotaFixtures {
     }
 
     private static func makeCurrent(remaining: Double, planType: String) -> QuotaSnapshot {
-        let resetsAt = designNow.addingTimeInterval(6 * 24 * 3600 + 18 * 3600)
+        let fiveHourResetsAt = designNow.addingTimeInterval(3 * 3600 + 12 * 60)
+        let weeklyResetsAt = designNow.addingTimeInterval(6 * 24 * 3600 + 18 * 3600)
         let credit1 = designNow.addingTimeInterval(9 * 24 * 3600)
         let credit2 = designNow.addingTimeInterval(16 * 24 * 3600)
         let used = max(0, min(100, 100 - remaining))
+        let weeklyRemaining = planType.lowercased() == "plus" ? 72.0 : remaining
+        let weeklyUsed = max(0, min(100, 100 - weeklyRemaining))
+        let isPlus = planType.lowercased() == "plus"
+        var windows: [QuotaWindow] = []
+        if isPlus {
+            windows.append(
+                QuotaWindow(
+                    id: "five-hour",
+                    remainingPercent: remaining,
+                    usedPercent: used,
+                    windowDurationMins: 300,
+                    resetsAt: fiveHourResetsAt,
+                    isFiveHour: true
+                )
+            )
+        }
+        windows.append(
+            QuotaWindow(
+                id: "weekly",
+                remainingPercent: weeklyRemaining,
+                usedPercent: weeklyUsed,
+                windowDurationMins: 10_080,
+                resetsAt: weeklyResetsAt,
+                isWeekly: true
+            )
+        )
         return QuotaSnapshot(
             remainingPercent: remaining,
             planType: planType,
-            resetsAt: resetsAt,
+            resetsAt: isPlus ? fiveHourResetsAt : weeklyResetsAt,
             resetOpportunityCount: 2,
             resetOpportunities: [
                 ResetOpportunity(index: 1, expiresAt: credit1),
                 ResetOpportunity(index: 2, expiresAt: credit2)
             ],
-            windows: [
-                QuotaWindow(
-                    id: "weekly",
-                    remainingPercent: remaining,
-                    usedPercent: used,
-                    windowDurationMins: 10_080,
-                    resetsAt: resetsAt,
-                    isWeekly: true
-                )
-            ],
+            windows: windows,
             fetchedAt: designNow,
             freshness: .current
         )

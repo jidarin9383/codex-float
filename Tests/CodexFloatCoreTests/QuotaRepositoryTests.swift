@@ -66,6 +66,48 @@ final class QuotaRepositoryTests: XCTestCase {
         await repository.shutdown()
     }
 
+    func testPlusEnrichmentPromotesFiveHourGlance() async throws {
+        let fiveHour = QuotaWindow(
+            id: "five-hour",
+            remainingPercent: 60,
+            usedPercent: 40,
+            windowDurationMins: 300,
+            resetsAt: testNow.addingTimeInterval(3 * 3600),
+            isFiveHour: true
+        )
+        let gate = EnrichmentGate()
+        let repository = QuotaRepository(
+            rateLimitsFetcher: {
+                WireGetAccountRateLimitsResponse(
+                    rateLimits: WireRateLimitSnapshot(
+                        planType: "plus",
+                        primary: WireRateLimitWindow(
+                            usedPercent: 82,
+                            windowDurationMins: 10_080,
+                            resetsAt: 1_800_000_000
+                        )
+                    ),
+                    rateLimitResetCredits: WireRateLimitResetCredits(availableCount: 1)
+                )
+            },
+            resetCreditsFetcher: { try await gate.fetch() }
+        )
+
+        let snapshot = await repository.refresh(now: testNow)
+        XCTAssertEqual(snapshot.remainingPercent, 18)
+        XCTAssertFalse(snapshot.usesFiveHourGlance)
+        try await waitUntil { await gate.callCount == 1 }
+
+        await gate.resolve(with: ResetCreditsDetail(expiresAt: [testExpiry], fiveHourWindow: fiveHour))
+        try await waitUntil {
+            await repository.lastSuccessfulSnapshot()?.remainingPercent == 60
+        }
+        let enriched = await repository.lastSuccessfulSnapshot()
+        XCTAssertEqual(enriched?.remainingPercent, 60)
+        XCTAssertEqual(enriched?.usesFiveHourGlance, true)
+        await repository.shutdown()
+    }
+
     private let testNow = Date(timeIntervalSince1970: 1_800_000_000)
     private let testExpiry = Date(timeIntervalSince1970: 1_800_086_400)
 

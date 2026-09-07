@@ -39,5 +39,8 @@ struct FloatingPanelContent: View {
         .padding(CodexFloatTheme.panelShadowBleed)
         .animation(.easeOut(duration: 0.2), value: viewModel.isExpanded)
         .animation(.easeOut(duration: 0.18), value: viewModel.isResetOpportunityListExpanded)
+        .onChange(of: viewModel.snapshot.usesFiveHourGlance) { _, _ in
+            onLayoutChange()
+        }
     }
 }
