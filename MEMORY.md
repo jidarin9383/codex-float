@@ -157,3 +157,8 @@
 - 5-hour identity is exact `300` minutes (app-server) or `18_000` seconds (`/wham/usage`). Never invent the window. Plus without 5-hour data falls back to weekly.
 - Source order: app-server `primary`/`secondary` first; optional cached `/wham/usage` may attach a real 5-hour window for Plus only. HTTPS still must not replace app-server weekly data or reset-credit count.
 - Compact widget and menu bar continue to show a single percentage (`QuotaSnapshot.remainingPercent`); mapper selects which window that number represents.
+
+## 2026-09-25 — Recover stalled quota reads and close the floating widget
+
+- A long-running app-server process could repeatedly return a protocol error while a fresh process returned current quota. The repository now restarts the client and retries once on that error; the 60-second polling cadence is unchanged.
+- Right-clicking either compact or expanded floating content opens a native `关闭悬浮窗` action. It uses the existing visibility preference path so the panel and menu toggle stay in sync.

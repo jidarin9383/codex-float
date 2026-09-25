@@ -7,9 +7,11 @@ final class FloatingPanelController {
     private var panel: NSPanel?
     private var hostingView: NSHostingView<FloatingPanelContent>?
     private let viewModel: QuotaViewModel
+    private let onClose: () -> Void
 
-    init(viewModel: QuotaViewModel) {
+    init(viewModel: QuotaViewModel, onClose: @escaping () -> Void) {
         self.viewModel = viewModel
+        self.onClose = onClose
     }
 
     func setVisible(_ visible: Bool) {
@@ -37,6 +39,7 @@ final class FloatingPanelController {
     private func makeRootView() -> FloatingPanelContent {
         FloatingPanelContent(
             viewModel: viewModel,
+            onClose: onClose,
             onLayoutChange: { [weak self] in
                 self?.resizeToCurrentState(animated: true)
             }

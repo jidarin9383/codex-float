@@ -5,6 +5,7 @@ import CodexFloatCore
 /// Adds shadow bleed padding so rounded elevation is not clipped to a rectangle.
 struct FloatingPanelContent: View {
     @Bindable var viewModel: QuotaViewModel
+    var onClose: () -> Void
     var onLayoutChange: () -> Void
 
     var body: some View {
@@ -41,6 +42,9 @@ struct FloatingPanelContent: View {
         .animation(.easeOut(duration: 0.18), value: viewModel.isResetOpportunityListExpanded)
         .onChange(of: viewModel.snapshot.usesFiveHourGlance) { _, _ in
             onLayoutChange()
+        }
+        .contextMenu {
+            Button("关闭悬浮窗", action: onClose)
         }
     }
 }

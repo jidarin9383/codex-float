@@ -9,7 +9,10 @@ final class AppModel {
     let preferences: AppPreferences
 
     @ObservationIgnored
-    private(set) lazy var panelController = FloatingPanelController(viewModel: viewModel)
+    private(set) lazy var panelController = FloatingPanelController(
+        viewModel: viewModel,
+        onClose: { [weak self] in self?.setFloatingWidgetVisible(false) }
+    )
 
     init(
         viewModel: QuotaViewModel = QuotaViewModel(),

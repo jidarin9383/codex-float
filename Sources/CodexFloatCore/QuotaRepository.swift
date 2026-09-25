@@ -130,8 +130,16 @@ public actor QuotaRepository {
             if let rateLimitsFetcher {
                 wire = try await rateLimitsFetcher()
             } else {
-                let client = try await ensureClient()
-                wire = try await client.readRateLimits()
+                do {
+                    let client = try await ensureClient()
+                    wire = try await client.readRateLimits()
+                } catch let error as AppServerClientError {
+                    guard case .protocolError = error else { throw error }
+                    await client?.shutdown()
+                    client = nil
+                    let replacement = try await ensureClient()
+                    wire = try await replacement.readRateLimits()
+                }
             }
             var snapshot = RateLimitsMapper.snapshot(from: wire, fetchedAt: now, freshness: .current)
             if !cachedResetCreditExpirations.isEmpty || cachedFiveHourWindow != nil {
@@ -155,7 +163,7 @@ public actor QuotaRepository {
         } catch let error as AppServerClientError {
             // Drop dead process so the next attempt relaunches cleanly.
             switch error {
-            case .processExited, .notRunning, .timeout, .ioFailure:
+            case .processExited, .notRunning, .timeout, .ioFailure, .protocolError:
                 await client?.shutdown()
                 client = nil
             default:

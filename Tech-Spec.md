@@ -124,6 +124,7 @@ The selected path is persisted as a bookmark or plain non-secret preference as a
 - Widget visible or detail open: every 60 seconds.
 - Menu-bar-only: every 60 seconds.
 - Failure backoff: 15 seconds, 30 seconds, 1 minute, then 5 minutes, capped.
+- On a rate-limit protocol error, restart the app-server process and retry the read once before entering failure backoff.
 - Wake/network recovery: immediate refresh.
 - Only one refresh may be in flight.
 - No manual refresh control is exposed in the normal UI; automatic refresh and recovery own freshness.

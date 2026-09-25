@@ -92,6 +92,7 @@ The app should feel like a quiet macOS instrument aligned with **macOS Tahoe liq
 ## Interaction and Motion
 
 - Click widget: open detail without moving the widget.
+- Right-click the floating widget or detail panel: show a native menu with `关闭悬浮窗`.
 - Drag: movement begins only after a small threshold to prevent accidental repositioning.
 - Progress updates animate over 180–240 ms with ease-out.
 - No continuous animation in healthy or stale states.
