@@ -8,6 +8,7 @@ import CodexFloatCore
 @Observable
 final class QuotaViewModel {
     var snapshot: QuotaSnapshot
+    private(set) var isManuallyRefreshing = false
     var isExpanded: Bool
     var useStaticFixtures: Bool
     /// When true, detail shows per-credit date rows (only if dates exist).
@@ -128,6 +129,14 @@ final class QuotaViewModel {
         guard !useStaticFixtures else { return }
         let next = await repository.refresh()
         snapshot = next
+    }
+
+    /// Explicit recovery bypasses the long-lived process and enrichment cache.
+    func refreshManually() async {
+        guard !useStaticFixtures, !isManuallyRefreshing else { return }
+        isManuallyRefreshing = true
+        defer { isManuallyRefreshing = false }
+        snapshot = await repository.refresh(force: true)
     }
 
     // MARK: - Fixtures (dev QA via CODEX_FLOAT_STATIC_FIXTURES=1 only)

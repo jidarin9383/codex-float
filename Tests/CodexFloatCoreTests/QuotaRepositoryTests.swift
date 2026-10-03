@@ -108,6 +108,126 @@ final class QuotaRepositoryTests: XCTestCase {
         await repository.shutdown()
     }
 
+    func testConcurrentRefreshWaitsForFreshResult() async throws {
+        let gate = RateLimitsGate()
+        let repository = QuotaRepository(
+            rateLimitsFetcher: { await gate.fetch() },
+            resetCreditsFetcher: { throw ChatGPTQuotaClientError.network }
+        )
+        let now = testNow
+        let first = Task { await repository.refresh(now: now) }
+        try await waitUntil { await gate.callCount == 1 }
+        let second = Task { await repository.refresh(now: now) }
+        try await Task.sleep(for: .milliseconds(20))
+        await gate.resolve()
+        let firstResult = await first.value
+        let secondResult = await second.value
+        XCTAssertEqual(firstResult.remainingPercent, 18)
+        XCTAssertEqual(secondResult, firstResult)
+        let calls = await gate.callCount
+        XCTAssertEqual(calls, 1)
+        await repository.shutdown()
+    }
+
+    func testManualRefreshFollowsInFlightAutomaticRead() async throws {
+        let gate = RateLimitsGate()
+        let repository = QuotaRepository(
+            rateLimitsFetcher: { await gate.fetch() },
+            resetCreditsFetcher: { throw ChatGPTQuotaClientError.network }
+        )
+        let now = testNow
+        let automatic = Task { await repository.refresh(now: now) }
+        try await waitUntil { await gate.callCount == 1 }
+        let manual = Task { await repository.refresh(now: now.addingTimeInterval(1), force: true) }
+        try await Task.sleep(for: .milliseconds(20))
+        await gate.resolve()
+        _ = await automatic.value
+        let result = await manual.value
+        XCTAssertEqual(result.fetchedAt, now.addingTimeInterval(1))
+        XCTAssertEqual(result.remainingPercent, 18)
+        let calls = await gate.callCount
+        XCTAssertEqual(calls, 2)
+        await repository.shutdown()
+    }
+
+    func testConcurrentManualRefreshesShareOneRequest() async throws {
+        let gate = RateLimitsGate()
+        let repository = QuotaRepository(
+            rateLimitsFetcher: { await gate.fetch() },
+            resetCreditsFetcher: { throw ChatGPTQuotaClientError.network }
+        )
+        let now = testNow
+        let first = Task { await repository.refresh(now: now, force: true) }
+        try await waitUntil { await gate.callCount == 1 }
+        let second = Task { await repository.refresh(now: now, force: true) }
+        try await Task.sleep(for: .milliseconds(20))
+        await gate.resolve()
+        let firstResult = await first.value
+        let secondResult = await second.value
+        XCTAssertEqual(firstResult, secondResult)
+        let calls = await gate.callCount
+        XCTAssertEqual(calls, 1)
+        await repository.shutdown()
+    }
+
+    func testManualRefreshBypassesCacheAndAwaitsEnrichment() async throws {
+        let expiry = testExpiry
+        let fetcher = SequencedEnrichmentFetcher(results: [
+            .success(ResetCreditsDetail(expiresAt: [testExpiry])),
+            .success(ResetCreditsDetail(expiresAt: [testExpiry.addingTimeInterval(3600)])),
+            .failure(ChatGPTQuotaClientError.network)
+        ])
+        let repository = makeRepository { try await fetcher.fetch() }
+        _ = await repository.refresh(now: testNow)
+        try await waitUntil {
+            await repository.lastSuccessfulSnapshot()?.resetOpportunities.first?.expiresAt == expiry
+        }
+        let forced = await repository.refresh(now: testNow.addingTimeInterval(1), force: true)
+        XCTAssertEqual(forced.resetOpportunities.first?.expiresAt, testExpiry.addingTimeInterval(3600))
+        let calls = await fetcher.callCount
+        XCTAssertEqual(calls, 2)
+        let fallback = await repository.refresh(now: testNow.addingTimeInterval(2), force: true)
+        XCTAssertEqual(fallback.remainingPercent, 18)
+        XCTAssertEqual(fallback.freshness, .current)
+        await repository.shutdown()
+    }
+
+    func testManualRefreshReplacesCachedPlusFiveHourWindow() async throws {
+        let now = testNow
+        let initial = QuotaWindow(
+            id: "five-hour", remainingPercent: 60, usedPercent: 40,
+            windowDurationMins: 300, resetsAt: now.addingTimeInterval(3600), isFiveHour: true
+        )
+        var updated = initial
+        updated.remainingPercent = 45
+        updated.usedPercent = 55
+        let fetcher = SequencedEnrichmentFetcher(results: [
+            .success(ResetCreditsDetail(expiresAt: [], fiveHourWindow: initial)),
+            .success(ResetCreditsDetail(expiresAt: [], fiveHourWindow: updated)),
+            .failure(ChatGPTQuotaClientError.network)
+        ])
+        let repository = QuotaRepository(
+            rateLimitsFetcher: {
+                WireGetAccountRateLimitsResponse(rateLimits: WireRateLimitSnapshot(
+                    planType: "plus",
+                    primary: WireRateLimitWindow(
+                        usedPercent: 82, windowDurationMins: 10_080, resetsAt: 1_800_000_000
+                    )
+                ))
+            },
+            resetCreditsFetcher: { try await fetcher.fetch() }
+        )
+        _ = await repository.refresh(now: now)
+        try await waitUntil { await repository.lastSuccessfulSnapshot()?.remainingPercent == 60 }
+        let forced = await repository.refresh(now: now.addingTimeInterval(1), force: true)
+        XCTAssertEqual(forced.remainingPercent, 45)
+        XCTAssertTrue(forced.usesFiveHourGlance)
+        let fallback = await repository.refresh(now: now.addingTimeInterval(2), force: true)
+        XCTAssertEqual(fallback.remainingPercent, 18)
+        XCTAssertFalse(fallback.usesFiveHourGlance)
+        await repository.shutdown()
+    }
+
     private let testNow = Date(timeIntervalSince1970: 1_800_000_000)
     private let testExpiry = Date(timeIntervalSince1970: 1_800_086_400)
 
@@ -172,5 +292,28 @@ private actor SequencedEnrichmentFetcher {
     func fetch() throws -> ResetCreditsDetail {
         callCount += 1
         return try results.removeFirst().get()
+    }
+}
+
+private actor RateLimitsGate {
+    private(set) var callCount = 0
+    private var continuation: CheckedContinuation<WireGetAccountRateLimitsResponse, Never>?
+    private var result: WireGetAccountRateLimitsResponse?
+
+    func fetch() async -> WireGetAccountRateLimitsResponse {
+        callCount += 1
+        if let result { return result }
+        return await withCheckedContinuation { continuation = $0 }
+    }
+
+    func resolve() {
+        let wire = WireGetAccountRateLimitsResponse(
+            rateLimits: WireRateLimitSnapshot(primary: WireRateLimitWindow(
+                usedPercent: 82, windowDurationMins: 10_080, resetsAt: 1_800_000_000
+            ))
+        )
+        result = wire
+        continuation?.resume(returning: wire)
+        continuation = nil
     }
 }

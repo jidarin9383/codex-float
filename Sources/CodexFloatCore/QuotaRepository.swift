@@ -37,7 +37,8 @@ public actor QuotaRepository {
     private let resetCreditsFetcher: ResetCreditsFetcher
     private var backoff = RetryBackoff()
     private var lastSuccess: QuotaSnapshot?
-    private var refreshInFlight = false
+    private var refreshTask: Task<QuotaSnapshot, Never>?
+    private var refreshIsForced = false
     private var lastAttemptAt: Date?
     private var cachedResetCreditExpirations: [Date] = []
     private var cachedFiveHourWindow: QuotaWindow?
@@ -100,29 +101,35 @@ public actor QuotaRepository {
         backoff.failureCount
     }
 
-    /// Fetch a fresh snapshot. Concurrent callers share one in-flight request.
+    /// Concurrent callers await a shared result; manual recovery follows any ordinary read.
     @discardableResult
-    public func refresh(now: Date = .now) async -> QuotaSnapshot {
-        if refreshInFlight {
-            // Waiters still get the last known view; caller can re-enter after.
-            if var last = lastSuccess {
-                if RateLimitsMapper.isStale(
-                    fetchedAt: last.fetchedAt,
-                    now: now,
-                    threshold: preferences.staleThreshold
-                ) {
-                    last.freshness = .stale
-                    if last.statusMessage == nil {
-                        last.statusMessage = "数据可能不是最新"
-                    }
-                }
-                return last
-            }
-            return QuotaSnapshot(freshness: .loading, statusMessage: "正在读取额度…")
+    public func refresh(now: Date = .now, force: Bool = false) async -> QuotaSnapshot {
+        if let refreshTask {
+            let wasForced = refreshIsForced
+            let result = await refreshTask.value
+            if !force || wasForced { return result }
+            return await refresh(now: now, force: true)
         }
+        refreshIsForced = force
+        let task = Task { await self.performRefresh(now: now, force: force) }
+        refreshTask = task
+        return await task.value
+    }
 
-        refreshInFlight = true
-        defer { refreshInFlight = false }
+    private func performRefresh(now: Date, force: Bool) async -> QuotaSnapshot {
+        defer {
+            refreshTask = nil
+            refreshIsForced = false
+        }
+        if force {
+            // A fresh process also recovers reads that succeed with an old server snapshot.
+            await client?.shutdown()
+            client = nil
+            // Let a prior enrichment finish before bypassing its cache.
+            await enrichmentTask?.value
+            cachedFiveHourWindow = nil
+            lastEnrichmentSuccessAt = nil
+        }
         lastAttemptAt = now
 
         do {
@@ -158,6 +165,15 @@ public actor QuotaRepository {
             }
             lastSuccess = snapshot
             backoff.registerSuccess()
+            if force {
+                do {
+                    let detail = try await resetCreditsFetcher()
+                    finishEnrichment(detail, succeededAt: now)
+                } catch {
+                    // HTTPS is optional; the fresh app-server snapshot remains authoritative.
+                }
+                return lastSuccess ?? snapshot
+            }
             startEnrichmentIfNeeded(now: now)
             return snapshot
         } catch let error as AppServerClientError {

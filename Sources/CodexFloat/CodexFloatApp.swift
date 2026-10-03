@@ -22,6 +22,13 @@ struct MenuBarActionsView: View {
     @Bindable var model: AppModel
 
     var body: some View {
+        Button(model.viewModel.isManuallyRefreshing ? "正在刷新…" : "立即刷新") {
+            Task { await model.viewModel.refreshManually() }
+        }
+        .disabled(model.viewModel.isManuallyRefreshing || model.viewModel.useStaticFixtures)
+
+        Divider()
+
         Toggle("悬浮窗", isOn: Binding(
             get: { model.preferences.floatingWidgetVisible },
             set: { model.setFloatingWidgetVisible($0) }

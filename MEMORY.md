@@ -162,3 +162,18 @@
 
 - A long-running app-server process could repeatedly return a protocol error while a fresh process returned current quota. The repository now restarts the client and retries once on that error; the 60-second polling cadence is unchanged.
 - Right-clicking either compact or expanded floating content opens a native `关闭悬浮窗` action. It uses the existing visibility preference path so the panel and menu toggle stay in sync.
+
+## 2026-10-03 — Manual quota refresh recovery
+
+- User reports occasional stalled quota updates after extended uptime and requested a right-click recovery action.
+- `立即刷新` is available in the floating context menu (compact and expanded) and menu bar, with disabled `正在刷新…` feedback during manual work.
+- Explicit refresh follows an in-flight automatic read, relaunches app-server, bypasses the 15-minute enrichment cache, and awaits optional HTTPS data before presenting the result. HTTPS failure falls back to the fresh local snapshot rather than retaining a cached Plus five-hour metric as fresh.
+- Concurrent refresh calls now await one shared task instead of immediately returning the previous snapshot. Duplicate forced requests share that task.
+- Extended-uptime failure is not yet reproduced; this adds a deliberate recovery path, not proof that every automatic-refresh stall is resolved.
+- Native menu inspection was blocked by desktop automation timeouts. Build, focused concurrency/cache tests, smoke checks, and universal packaging were used for verification.
+
+## 2026-10-03 — 0.2.2 release configuration
+
+- Manual refresh recovery is versioned as 0.2.2 (source bundle build 6).
+- Release packaging injects `jidarin9383/codex-float` for update checks and includes both Apple Silicon and Intel slices.
+- The existing tag-triggered GitHub workflow remains the publishing path. Distribution continues to use ad-hoc signing without Developer ID notarization, as established for GitHub releases.

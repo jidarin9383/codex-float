@@ -81,7 +81,7 @@ At any moment, glance at the desktop or menu bar and understand remaining Codex 
 - While menu-bar-only, poll every 60 seconds by default.
 - After failures, keep the last successful value but mark it stale and retry with bounded backoff.
 - “Live” means automatically refreshed ambient status, not a streaming billing meter.
-- Normal current state does not show refresh controls or an update timestamp; stale and error states surface only when action is needed.
+- Normal current state stays visually quiet. A native right-click `立即刷新` action on the floating widget and detail panel provides recovery without restarting the app; the menu bar also exposes it. While refreshing, disable the action and show `正在刷新…`.
 
 ## States
 

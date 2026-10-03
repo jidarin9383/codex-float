@@ -44,6 +44,11 @@ struct FloatingPanelContent: View {
             onLayoutChange()
         }
         .contextMenu {
+            Button(viewModel.isManuallyRefreshing ? "正在刷新…" : "立即刷新") {
+                Task { await viewModel.refreshManually() }
+            }
+            .disabled(viewModel.isManuallyRefreshing || viewModel.useStaticFixtures)
+            Divider()
             Button("关闭悬浮窗", action: onClose)
         }
     }

@@ -139,3 +139,9 @@ The app should feel like a quiet macOS instrument aligned with **macOS Tahoe liq
 - The progress track represents remaining quota: 18% remaining means an 18%-filled track.
 - Do not show a target marker, `已使用 82%`, or `100%`; those repeat information already conveyed by the hero metric.
 - Remove the normal-state refresh icon, update timestamp, and settings row. Automatic refresh should be invisible unless data becomes stale or unavailable.
+
+## 2026-10-03 — Manual refresh recovery
+
+- Keep the compact and detail layouts unchanged. Their shared native context menu now begins with `立即刷新`, then a separator and `关闭悬浮窗`.
+- While a manual request is running, use disabled `正在刷新…` copy. The menu bar exposes the same action.
+- This context-menu recovery action supersedes the earlier prohibition on all normal-state manual refresh controls; no inline refresh icon is added.

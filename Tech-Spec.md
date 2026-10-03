@@ -127,7 +127,10 @@ The selected path is persisted as a bookmark or plain non-secret preference as a
 - On a rate-limit protocol error, restart the app-server process and retry the read once before entering failure backoff.
 - Wake/network recovery: immediate refresh.
 - Only one refresh may be in flight.
-- No manual refresh control is exposed in the normal UI; automatic refresh and recovery own freshness.
+- Floating content (compact and expanded) exposes `立即刷新` in its native context menu; the menu bar offers the same recovery action.
+- Manual refresh waits for any automatic read, relaunches app-server, and bypasses the HTTPS enrichment cache. Concurrent callers await the actual result; repeated manual clicks share one forced request.
+- Disable manual refresh while running and show `正在刷新…`. Preserve stale/error reporting on local read failure; optional HTTPS failure retains authoritative local data.
+- Verification: concurrent reads share a result, forced refresh bypasses the enrichment cache and awaits new Plus data, failure remains retryable, and both floating states expose the action.
 
 ## Security and Privacy
 
