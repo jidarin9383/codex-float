@@ -1,5 +1,15 @@
 # Project Memory
 
+## 2026-10-05 — Plus enrichment recovery
+
+- User clarification: restarting Codex Float restores quota; signing out of the Codex account is not required. Plus manual refresh completes but can leave an unchanged value after travel/network changes. That full real-world symptom remains unverified.
+- Reproduced two narrower defects: credits success masked usage failure and suppressed retries for 15 minutes; new HTTPS 5-hour data failed to replace the previously merged HTTPS window until another poll.
+- `ResetCreditsDetail.usageFetchSucceeded` now keeps partial usage failures retryable. A valid usage response without a short window still clears the cached window and falls back to weekly.
+- Repository retains the raw app-server snapshot separately, rebuilds HTTPS enrichment from it, and publishes ordered `AsyncStream` updates to the UI. App-server windows/count remain authoritative. Failed usage enrichment marks a retained HTTPS 5-hour value stale and preserves its original fetch time.
+- Network monitoring/session replacement is not part of this repair; neither was verified as the cause. Regression coverage uses mocked HTTPS outage/recovery without touching actual network settings or reading real credentials.
+- Verification: 28 XCTest cases, core smoke checks, and a temporary harness using the actual `QuotaViewModel` passed. The harness checks background delivery without another poll, manual refresh, and resubscription after fixture mode. Universal ad-hoc packaging passed for 0.2.2 build 7 under `dist/quota-refresh-fix`; the installed application was not replaced.
+- Release configuration is 0.2.3 with source bundle build 7. Publishing follows the existing tag-triggered GitHub workflow; release notes state that the broader travel/network-change symptom remains unverified.
+
 ## 2026-07-14 — Initial product and protocol decisions
 
 - The product is a native macOS quota monitor for Codex, with a menu bar item, an optional always-on-top floating widget, and a detailed popover.

@@ -47,6 +47,9 @@ MenuBarExtra / Floating NSPanel / Detail Popover
 - Maps `rateLimitResetCredits.availableCount` into an optional reset-opportunity count for the detail view.
 - Treats the app-server reset count as authoritative and accepts only `0...100` before creating display rows.
 - Publishes app-server snapshots without awaiting optional HTTPS enrichment; enrichment is cached for 15 minutes and may add reset-credit dates and, for Plus only, a real 5-hour window from `/wham/usage`.
+- Publishes ordered snapshots through `AsyncStream`, including completed HTTPS enrichment. Presentation consumes this stream so background results update both surfaces immediately and earlier refresh return values cannot overwrite them.
+- Rebuilds enriched snapshots from the latest unmodified app-server snapshot. New HTTPS windows replace earlier HTTPS windows while app-server windows remain authoritative. A successful usage response without a 5-hour window clears the cached HTTPS window.
+- Distinguishes a failed usage request from a successful response with no short window. Credits-only partial success does not start the 15-minute cache period; usage retries on the next poll. Retained HTTPS 5-hour values use their original fetch time and a stale state after usage failures.
 
 ### `LocalSampleStore`
 

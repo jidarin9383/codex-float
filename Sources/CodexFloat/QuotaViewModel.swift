@@ -24,6 +24,9 @@ final class QuotaViewModel {
     private var pollTask: Task<Void, Never>?
 
     @ObservationIgnored
+    private var snapshotTask: Task<Void, Never>?
+
+    @ObservationIgnored
     private var wakeObserver: NSObjectProtocol?
 
     init(
@@ -48,6 +51,7 @@ final class QuotaViewModel {
 
     deinit {
         pollTask?.cancel()
+        snapshotTask?.cancel()
     }
 
     // MARK: - Surfaces
@@ -109,6 +113,8 @@ final class QuotaViewModel {
     func stop() {
         pollTask?.cancel()
         pollTask = nil
+        snapshotTask?.cancel()
+        snapshotTask = nil
         if let wakeObserver {
             NSWorkspace.shared.notificationCenter.removeObserver(wakeObserver)
             self.wakeObserver = nil
@@ -119,6 +125,7 @@ final class QuotaViewModel {
     func restartPolling() {
         pollTask?.cancel()
         guard !useStaticFixtures else { return }
+        observeSnapshotsIfNeeded()
         pollTask = Task { [weak self] in
             await self?.pollLoop()
         }
@@ -127,8 +134,8 @@ final class QuotaViewModel {
     /// Immediate refresh (launch, wake, widget shown, expand).
     func refreshNow() async {
         guard !useStaticFixtures else { return }
-        let next = await repository.refresh()
-        snapshot = next
+        observeSnapshotsIfNeeded()
+        await repository.refresh()
     }
 
     /// Explicit recovery bypasses the long-lived process and enrichment cache.
@@ -136,7 +143,8 @@ final class QuotaViewModel {
         guard !useStaticFixtures, !isManuallyRefreshing else { return }
         isManuallyRefreshing = true
         defer { isManuallyRefreshing = false }
-        snapshot = await repository.refresh(force: true)
+        observeSnapshotsIfNeeded()
+        await repository.refresh(force: true)
     }
 
     // MARK: - Fixtures (dev QA via CODEX_FLOAT_STATIC_FIXTURES=1 only)
@@ -156,6 +164,8 @@ final class QuotaViewModel {
         if enabled {
             pollTask?.cancel()
             pollTask = nil
+            snapshotTask?.cancel()
+            snapshotTask = nil
             snapshot = QuotaFixtures.healthy75Percent
         } else {
             snapshot = QuotaSnapshot(freshness: .loading, statusMessage: "正在读取额度…")
@@ -165,11 +175,22 @@ final class QuotaViewModel {
 
     // MARK: - Private
 
+    private func observeSnapshotsIfNeeded() {
+        guard snapshotTask == nil else { return }
+        let repository = self.repository
+        snapshotTask = Task { [weak self] in
+            let updates = await repository.snapshotUpdates()
+            for await next in updates {
+                guard !Task.isCancelled, let self, !self.useStaticFixtures else { return }
+                self.snapshot = next
+            }
+        }
+    }
+
     private func pollLoop() async {
         while !Task.isCancelled {
-            let next = await repository.refresh()
+            await repository.refresh()
             guard !Task.isCancelled else { return }
-            snapshot = next
 
             let mode: QuotaRepository.SurfaceMode =
                 (floatingWidgetVisible || isExpanded) ? .widgetVisible : .menuBarOnly

@@ -228,6 +228,129 @@ final class QuotaRepositoryTests: XCTestCase {
         await repository.shutdown()
     }
 
+    func testAutomaticEnrichmentReplacesPreviousHTTPSWindow() async throws {
+        let initial = QuotaWindow(
+            id: "five-hour", remainingPercent: 60, usedPercent: 40,
+            windowDurationMins: 300, isFiveHour: true
+        )
+        var updated = initial
+        updated.remainingPercent = 45
+        updated.usedPercent = 55
+        let expiry = testExpiry.addingTimeInterval(3600)
+        let fetcher = SequencedEnrichmentFetcher(results: [
+            .success(ResetCreditsDetail(expiresAt: [testExpiry], fiveHourWindow: initial)),
+            .success(ResetCreditsDetail(expiresAt: [expiry], fiveHourWindow: updated))
+        ])
+        let repository = makePlusRepository { try await fetcher.fetch() }
+        _ = await repository.refresh(now: testNow)
+        try await waitUntil { await repository.lastSuccessfulSnapshot()?.remainingPercent == 60 }
+        _ = await repository.refresh(now: testNow.addingTimeInterval(900))
+        try await waitUntil {
+            await repository.lastSuccessfulSnapshot()?.resetOpportunities.first?.expiresAt == expiry
+        }
+        let result = await repository.lastSuccessfulSnapshot()
+        XCTAssertEqual(result?.remainingPercent, 45)
+        XCTAssertEqual(result?.weeklyWindow?.remainingPercent, 18)
+        await repository.shutdown()
+    }
+
+    private func makePlusRepository(
+        resetCreditsFetcher: @escaping QuotaRepository.ResetCreditsFetcher
+    ) -> QuotaRepository {
+        QuotaRepository(
+            rateLimitsFetcher: {
+                WireGetAccountRateLimitsResponse(
+                    rateLimits: WireRateLimitSnapshot(
+                        planType: "plus",
+                        primary: WireRateLimitWindow(usedPercent: 82, windowDurationMins: 10_080)
+                    ),
+                    rateLimitResetCredits: WireRateLimitResetCredits(availableCount: 1)
+                )
+            },
+            resetCreditsFetcher: resetCreditsFetcher
+        )
+    }
+
+    func testEnrichmentPublishesWithoutAnotherRefresh() async throws {
+        let gate = EnrichmentGate()
+        let repository = makePlusRepository { try await gate.fetch() }
+        var updates = await repository.snapshotUpdates().makeAsyncIterator()
+        _ = await repository.refresh(now: testNow)
+        let initial = await updates.next()
+        XCTAssertEqual(initial?.remainingPercent, 18)
+        try await waitUntil { await gate.callCount == 1 }
+        await gate.resolve(with: ResetCreditsDetail(
+            expiresAt: [], fiveHourWindow: QuotaWindow(
+                id: "five-hour", remainingPercent: 60, usedPercent: 40,
+                windowDurationMins: 300, isFiveHour: true
+            )
+        ))
+        try await waitUntil { await repository.lastSuccessfulSnapshot()?.remainingPercent == 60 }
+        let enriched = await updates.next()
+        XCTAssertEqual(enriched?.remainingPercent, 60)
+        XCTAssertTrue(enriched?.usesFiveHourGlance == true)
+        await repository.shutdown()
+    }
+
+    func testCancelledObservationCanSubscribeAgain() async throws {
+        let repository = makeRepository { throw ChatGPTQuotaClientError.network }
+        let updates = await repository.snapshotUpdates()
+        let observer = Task {
+            for await _ in updates {}
+        }
+        observer.cancel()
+        await observer.value
+        _ = await repository.refresh(now: testNow)
+        var replacement = await repository.snapshotUpdates().makeAsyncIterator()
+        let snapshot = await replacement.next()
+        XCTAssertEqual(snapshot?.remainingPercent, 18)
+        await repository.shutdown()
+    }
+
+    func testSuccessfulUsageWithoutFiveHourClearsPreviousHTTPSWindow() async throws {
+        let expiry = testExpiry.addingTimeInterval(3600)
+        let fetcher = SequencedEnrichmentFetcher(results: [
+            .success(ResetCreditsDetail(expiresAt: [testExpiry], fiveHourWindow: QuotaWindow(
+                id: "five-hour", remainingPercent: 60, usedPercent: 40,
+                windowDurationMins: 300, isFiveHour: true
+            ))),
+            .success(ResetCreditsDetail(expiresAt: [expiry]))
+        ])
+        let repository = makePlusRepository { try await fetcher.fetch() }
+        _ = await repository.refresh(now: testNow)
+        try await waitUntil { await repository.lastSuccessfulSnapshot()?.remainingPercent == 60 }
+        _ = await repository.refresh(now: testNow.addingTimeInterval(900))
+        try await waitUntil {
+            await repository.lastSuccessfulSnapshot()?.resetOpportunities.first?.expiresAt == expiry
+        }
+        let result = await repository.lastSuccessfulSnapshot()
+        XCTAssertFalse(result?.usesFiveHourGlance == true)
+        XCTAssertEqual(result?.remainingPercent, 18)
+        XCTAssertEqual(result?.freshness, .current)
+        await repository.shutdown()
+    }
+
+    func testAppServerFiveHourWinsOverHTTPSDuringManualRefresh() async throws {
+        let repository = QuotaRepository(
+            rateLimitsFetcher: {
+                WireGetAccountRateLimitsResponse(rateLimits: .init(
+                    planType: "plus", primary: .init(usedPercent: 40, windowDurationMins: 300),
+                    secondary: .init(usedPercent: 82, windowDurationMins: 10_080)
+                ))
+            },
+            resetCreditsFetcher: {
+                ResetCreditsDetail(expiresAt: [], fiveHourWindow: QuotaWindow(
+                    id: "five-hour", remainingPercent: 45, usedPercent: 55,
+                    windowDurationMins: 300, isFiveHour: true
+                ))
+            }
+        )
+        let result = await repository.refresh(now: testNow, force: true)
+        XCTAssertEqual(result.remainingPercent, 60)
+        XCTAssertEqual(result.weeklyWindow?.remainingPercent, 18)
+        await repository.shutdown()
+    }
+
     private let testNow = Date(timeIntervalSince1970: 1_800_000_000)
     private let testExpiry = Date(timeIntervalSince1970: 1_800_086_400)
 

@@ -7,15 +7,19 @@ public struct ResetCreditsDetail: Equatable, Sendable {
     public var expiresAt: [Date]
     /// Optional 5-hour window parsed from `/wham/usage`. Mapper applies it to Plus only.
     public var fiveHourWindow: QuotaWindow?
+    /// False when credits succeeded but the usage request failed. Partial results stay retryable.
+    public var usageFetchSucceeded: Bool
 
     public init(
         availableCount: Int? = nil,
         expiresAt: [Date] = [],
-        fiveHourWindow: QuotaWindow? = nil
+        fiveHourWindow: QuotaWindow? = nil,
+        usageFetchSucceeded: Bool = true
     ) {
         self.availableCount = availableCount
         self.expiresAt = expiresAt
         self.fiveHourWindow = fiveHourWindow
+        self.usageFetchSucceeded = usageFetchSucceeded
     }
 }
 
@@ -90,7 +94,10 @@ public actor ChatGPTQuotaClient {
 
         expires.sort()
         let fiveHour = usage.flatMap { Self.fiveHourWindow(from: $0) }
-        return ResetCreditsDetail(availableCount: count, expiresAt: expires, fiveHourWindow: fiveHour)
+        return ResetCreditsDetail(
+            availableCount: count, expiresAt: expires, fiveHourWindow: fiveHour,
+            usageFetchSucceeded: usage != nil
+        )
     }
 
     // MARK: - HTTP

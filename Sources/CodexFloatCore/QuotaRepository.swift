@@ -3,6 +3,8 @@ import Foundation
 /// Owns refresh policy, stale-state, retry backoff, and last successful snapshot.
 public actor QuotaRepository {
     private static let enrichmentCacheDuration: TimeInterval = 15 * 60
+    private var snapshotObservers: [UUID: AsyncStream<QuotaSnapshot>.Continuation] = [:]
+    private var lastPublishedSnapshot: QuotaSnapshot?
 
     public typealias RateLimitsFetcher = @Sendable () async throws -> WireGetAccountRateLimitsResponse
     public typealias ResetCreditsFetcher = @Sendable () async throws -> ResetCreditsDetail
@@ -37,11 +39,14 @@ public actor QuotaRepository {
     private let resetCreditsFetcher: ResetCreditsFetcher
     private var backoff = RetryBackoff()
     private var lastSuccess: QuotaSnapshot?
+    private var lastAppServerSnapshot: QuotaSnapshot?
     private var refreshTask: Task<QuotaSnapshot, Never>?
     private var refreshIsForced = false
     private var lastAttemptAt: Date?
     private var cachedResetCreditExpirations: [Date] = []
     private var cachedFiveHourWindow: QuotaWindow?
+    private var cachedFiveHourFetchedAt: Date?
+    private var usageEnrichmentFailed = false
     private var lastEnrichmentSuccessAt: Date?
     private var enrichmentTask: Task<Void, Never>?
 
@@ -63,6 +68,31 @@ public actor QuotaRepository {
         self.preferences = preferences
         self.rateLimitsFetcher = rateLimitsFetcher
         self.resetCreditsFetcher = resetCreditsFetcher
+    }
+
+    deinit {
+        for observer in snapshotObservers.values { observer.finish() }
+    }
+
+    /// Ordered updates include background enrichment; a cancelled surface can subscribe again.
+    public func snapshotUpdates() -> AsyncStream<QuotaSnapshot> {
+        let id = UUID()
+        let (stream, continuation) = AsyncStream<QuotaSnapshot>.makeStream(bufferingPolicy: .bufferingNewest(1))
+        snapshotObservers[id] = continuation
+        continuation.onTermination = { [weak self] _ in
+            Task { await self?.removeSnapshotObserver(id) }
+        }
+        if let lastPublishedSnapshot { continuation.yield(lastPublishedSnapshot) }
+        return stream
+    }
+
+    private func removeSnapshotObserver(_ id: UUID) {
+        snapshotObservers.removeValue(forKey: id)
+    }
+
+    private func publish(_ snapshot: QuotaSnapshot) {
+        lastPublishedSnapshot = snapshot
+        for observer in snapshotObservers.values { observer.yield(snapshot) }
     }
 
     public func updatePreferences(_ preferences: Preferences) {
@@ -128,6 +158,8 @@ public actor QuotaRepository {
             // Let a prior enrichment finish before bypassing its cache.
             await enrichmentTask?.value
             cachedFiveHourWindow = nil
+            cachedFiveHourFetchedAt = nil
+            usageEnrichmentFailed = false
             lastEnrichmentSuccessAt = nil
         }
         lastAttemptAt = now
@@ -149,15 +181,8 @@ public actor QuotaRepository {
                 }
             }
             var snapshot = RateLimitsMapper.snapshot(from: wire, fetchedAt: now, freshness: .current)
-            if !cachedResetCreditExpirations.isEmpty || cachedFiveHourWindow != nil {
-                snapshot = RateLimitsMapper.merging(
-                    snapshot,
-                    resetCredits: ResetCreditsDetail(
-                        expiresAt: cachedResetCreditExpirations,
-                        fiveHourWindow: cachedFiveHourWindow
-                    )
-                )
-            }
+            lastAppServerSnapshot = snapshot
+            snapshot = enrichedSnapshot() ?? snapshot
             // Prefer truthful empty glance state over inventing a short window.
             if snapshot.remainingPercent == nil {
                 snapshot.statusMessage = snapshot.isPlusPlan ? "未返回额度窗口" : "未返回本周额度窗口"
@@ -171,9 +196,12 @@ public actor QuotaRepository {
                     finishEnrichment(detail, succeededAt: now)
                 } catch {
                     // HTTPS is optional; the fresh app-server snapshot remains authoritative.
+                    finishEnrichment(nil, succeededAt: nil)
                 }
+                publish(lastSuccess ?? snapshot)
                 return lastSuccess ?? snapshot
             }
+            publish(snapshot)
             startEnrichmentIfNeeded(now: now)
             return snapshot
         } catch let error as AppServerClientError {
@@ -209,6 +237,12 @@ public actor QuotaRepository {
             last.freshness = .stale
             last.statusMessage = "数据可能不是最新"
             lastSuccess = last
+            if let source = lastAppServerSnapshot,
+               RateLimitsMapper.isStale(fetchedAt: source.fetchedAt, now: now, threshold: preferences.staleThreshold) {
+                lastAppServerSnapshot?.freshness = .stale
+                lastAppServerSnapshot?.statusMessage = last.statusMessage
+            }
+            publish(last)
         }
         return lastSuccess
     }
@@ -254,34 +288,64 @@ public actor QuotaRepository {
 
     private func finishEnrichment(_ detail: ResetCreditsDetail?, succeededAt: Date?) {
         defer { enrichmentTask = nil }
-        guard let detail, let succeededAt else { return }
-
-        lastEnrichmentSuccessAt = succeededAt
-        cachedResetCreditExpirations = detail.expiresAt.sorted()
-        if let fiveHour = detail.fiveHourWindow, fiveHour.isFiveHour {
-            cachedFiveHourWindow = fiveHour
+        if let detail, let succeededAt {
+            lastEnrichmentSuccessAt = detail.usageFetchSucceeded ? succeededAt : nil
+            usageEnrichmentFailed = !detail.usageFetchSucceeded
+            cachedResetCreditExpirations = detail.expiresAt.sorted()
+            if detail.usageFetchSucceeded {
+                // A successful usage response without a short window is a valid fallback state.
+                cachedFiveHourWindow = detail.fiveHourWindow.flatMap { $0.isFiveHour ? $0 : nil }
+                cachedFiveHourFetchedAt = cachedFiveHourWindow == nil ? nil : succeededAt
+            }
+        } else {
+            lastEnrichmentSuccessAt = nil
+            usageEnrichmentFailed = true
         }
-        guard let lastSuccess else { return }
-        self.lastSuccess = RateLimitsMapper.merging(
-            lastSuccess,
+        guard let snapshot = enrichedSnapshot() else { return }
+        lastSuccess = snapshot
+        publish(snapshot)
+    }
+
+    private func enrichedSnapshot() -> QuotaSnapshot? {
+        guard let source = lastAppServerSnapshot else { return nil }
+        // Rebuild from the authoritative source, so a prior HTTPS window cannot block its replacement.
+        var snapshot = RateLimitsMapper.merging(
+            source,
             resetCredits: ResetCreditsDetail(
                 expiresAt: cachedResetCreditExpirations,
                 fiveHourWindow: cachedFiveHourWindow
             )
         )
+        if source.isPlusPlan, source.fiveHourWindow == nil, cachedFiveHourWindow != nil {
+            snapshot.fetchedAt = cachedFiveHourFetchedAt ?? source.fetchedAt
+            if usageEnrichmentFailed, source.freshness == .current {
+                snapshot.freshness = .stale
+                snapshot.statusMessage = "5 小时额度更新失败，显示上次数据"
+            }
+        }
+        if snapshot.remainingPercent == nil, snapshot.freshness == .current {
+            snapshot.statusMessage = snapshot.isPlusPlan ? "未返回额度窗口" : "未返回本周额度窗口"
+        }
+        return snapshot
     }
 
     private func failureSnapshot(error: AppServerClientError, now: Date) -> QuotaSnapshot {
         if var last = lastSuccess {
             last.freshness = .stale
             last.statusMessage = error.uiMessage
+            lastSuccess = last
+            lastAppServerSnapshot?.freshness = .stale
+            lastAppServerSnapshot?.statusMessage = error.uiMessage
+            publish(last)
             // Keep last numbers but mark untrustworthy.
             return last
         }
-        return QuotaSnapshot(
+        let snapshot = QuotaSnapshot(
             fetchedAt: now,
             freshness: .error,
             statusMessage: error.uiMessage
         )
+        publish(snapshot)
+        return snapshot
     }
 }
